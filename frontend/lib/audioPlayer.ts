@@ -1,6 +1,7 @@
 export class AudioPlayer {
   private ctx: AudioContext;
   private sourceNode: AudioBufferSourceNode | null = null;
+  private outputAnalyser: AnalyserNode;
 
   constructor() {
     this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)();

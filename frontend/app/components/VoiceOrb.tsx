@@ -68,7 +68,7 @@ export default function VoiceOrb({ analyser, speaker, size }: VoiceOrbProps) {
     let amplitude: number;
 
     if (analyser && dataArrayRef.current) {
-      analyser.getByteFrequencyData(dataArrayRef.current);
+      analyser.getByteFrequencyData(dataArrayRef.current as any);
       const sum = dataArrayRef.current.reduce((a, b) => a + b, 0);
       const avg = sum / dataArrayRef.current.length; // 0–255
       amplitude = avg / 255;
