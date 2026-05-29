@@ -1,4 +1,25 @@
 id: arjun
-name: Arjun
-role: Policy Expert
-language: hi-IN
+display_name: Arjun
+role: Insurance Renewal Agent
+avatar: /personas/arjun.png
+short_blurb: "Friendly reminders before your policy lapses."
+languages:
+  - en-IN
+  - hi-IN
+  - te-IN
+default_language: en-IN
+llm:
+  model: gemini-2.0-flash
+  temperature: 0.3
+  max_output_tokens: 200
+system_prompt_file: prompts/arjun.md
+tools:
+  - lookup_policy
+  - send_renewal_link
+default_context:
+  customer_name: "Ananya Reddy"
+  policy_id: "P-7781"
+  policy_type: "health"
+  expiry_date: "2026-06-15"
+  days_to_expiry: "17"
+  renewal_premium: "18,400"

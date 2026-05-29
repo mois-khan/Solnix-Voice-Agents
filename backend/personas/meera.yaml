@@ -1,4 +1,22 @@
 id: meera
-name: Meera
-role: Booking Coordinator
-language: te-IN
+display_name: Meera
+role: Appointment Booking Agent
+avatar: /personas/meera.png
+short_blurb: "Book, reschedule, or cancel appointments instantly."
+languages:
+  - en-IN
+  - hi-IN
+  - te-IN
+default_language: en-IN
+llm:
+  model: gemini-2.0-flash
+  temperature: 0.5
+  max_output_tokens: 200
+system_prompt_file: prompts/meera.md
+tools:
+  - get_available_slots
+  - book_slot
+  - lookup_booking
+  - cancel_booking
+default_context:
+  business_name: "SolnixCare Clinic, Hyderabad"
