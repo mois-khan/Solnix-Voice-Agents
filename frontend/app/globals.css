@@ -45,9 +45,25 @@
 
   body {
     font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-    background-color: var(--color-bg-base);
     color: var(--color-text-primary);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    
+    /* Rich dynamic background: 32px Grid intersecting with Aurora/Mesh gradients */
+    background-color: var(--color-bg-base);
+    background-image: 
+      linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px),
+      radial-gradient(circle at 15% 10%, rgba(124, 92, 255, 0.12), transparent 40%),
+      radial-gradient(circle at 85% 85%, rgba(6, 182, 212, 0.08), transparent 40%),
+      radial-gradient(circle at 50% 50%, rgba(167, 139, 250, 0.05), transparent 60%);
+    background-size: 32px 32px, 32px 32px, 100% 100%, 100% 100%, 100% 100%;
+    background-attachment: fixed;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-bg-elevated/40 backdrop-blur-xl border border-white/5 shadow-2xl;
   }
 }

@@ -1,39 +1,143 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import { motion, AnimatePresence, useInView } from 'framer-motion';
+import { MousePointerClick, Mic, Sparkles } from 'lucide-react';
+
+import { PersonaConfig, LanguageCode } from '../types';
 import { useStore } from '../lib/store';
-import { VoiceWSClient } from '../lib/wsClient';
-import { AudioCapture } from '../lib/audioCapture';
-import { AudioPlayer } from '../lib/audioPlayer';
-import { PersonaConfig } from '../types';
+import VoiceOrb from './components/VoiceOrb';
+import PersonaCard from './components/PersonaCard';
+import CallOverlay from './components/CallOverlay';
 
-export default function Page() {
-  const {
-    personas,
-    setPersonas,
-    setPersona,
-    selectedPersona,
-    callState,
-    startCall,
-    endCall,
-    agentState,
-    setAgentState,
-    appendTranscript,
-    transcript,
-    setLanguage,
-    currentLanguage
-  } = useStore();
+/* ───────────────────────────────────────── NAV ───────────────────────────────────────── */
 
-  const [micError, setMicError] = useState(false);
-  const [selectedPreCallPersona, setSelectedPreCallPersona] = useState<PersonaConfig | null>(null);
-  const [preCallLanguage, setPreCallLanguage] = useState<string | null>(null);
+function Nav() {
+  const [scrolled, setScrolled] = useState(false);
 
-  const LABELS = { 'en-IN': 'EN', 'hi-IN': 'हि', 'te-IN': 'తె' };
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
-  // Maintain instances across renders
-  const wsClientRef = useRef<VoiceWSClient | null>(null);
-  const captureRef = useRef<AudioCapture | null>(null);
-  const playerRef = useRef<AudioPlayer | null>(null);
+  return (
+    <nav
+      className={`
+        fixed top-0 left-0 right-0 z-40 h-16 flex items-center justify-between px-6 lg:px-12
+        transition-colors duration-300
+        ${scrolled ? 'backdrop-blur-md bg-bg-base/80 border-b border-border-subtle' : 'bg-transparent'}
+      `}
+    >
+      <a href="#" className="text-xl font-bold text-accent tracking-tight">
+        Solnix
+      </a>
+
+      <div className="hidden md:flex items-center gap-8">
+        {[
+          { label: 'Personas', href: '#personas' },
+          { label: 'How it works', href: '#how-it-works' },
+          { label: 'Tech', href: '#tech' },
+        ].map((link) => (
+          <a
+            key={link.href}
+            href={link.href}
+            className="text-sm text-text-secondary hover:text-text-primary transition-colors"
+          >
+            {link.label}
+          </a>
+        ))}
+        <a
+          href="https://github.com/solnixmedia"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm text-text-secondary hover:text-text-primary transition-colors"
+        >
+          GitHub
+        </a>
+      </div>
+    </nav>
+  );
+}
+
+/* ───────────────────────────────────────── HERO ──────────────────────────────────────── */
+
+function Hero() {
+  return (
+    <section className="relative min-h-[90vh] flex items-center pt-16 px-6 lg:px-12 overflow-hidden">
+      {/* Floating Background Blobs for Depth */}
+      <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent/20 rounded-full blur-[120px] pointer-events-none z-0" />
+      <div className="absolute top-1/2 right-1/4 translate-x-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none z-0" />
+
+      <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-20 relative z-10">
+        {/* Orb */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="flex items-center justify-center lg:w-1/2 shrink-0"
+        >
+          <div className="w-[260px] h-[260px] md:w-[320px] md:h-[320px] lg:w-[400px] lg:h-[400px]">
+            <VoiceOrb analyser={null} speaker="idle" size={400} />
+          </div>
+        </motion.div>
+
+        {/* Text */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          className="lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left gap-6"
+        >
+          <span className="text-xs uppercase tracking-widest text-text-tertiary font-medium">
+            AI Voice Agents · POC by SolnixMedia
+          </span>
+
+          <h1 className="text-[40px] md:text-[56px] lg:text-[64px] font-bold leading-[1.05] text-text-primary">
+            Talk to an AI voice agent.{' '}
+            <span className="text-accent">In your language.</span>
+          </h1>
+
+          <p className="text-lg text-text-secondary max-w-lg leading-relaxed">
+            Three personas. Hindi. Telugu. English.
+            <br />
+            Powered by Sarvam AI + Gemini.
+          </p>
+
+          <a
+            href="#personas"
+            className="inline-flex items-center gap-2 h-12 px-8 rounded-xl bg-accent text-white font-medium
+                       hover:brightness-110 active:scale-[0.98] transition-all duration-150"
+          >
+            Start a call ↓
+          </a>
+
+          {/* Tech pill strip */}
+          <div className="flex flex-wrap gap-2 mt-2">
+            {['Sarvam AI', 'Gemini', 'FastAPI'].map((t) => (
+              <span
+                key={t}
+                className="text-[11px] font-medium px-3 py-1 rounded-pill border border-border-subtle text-text-tertiary"
+              >
+                {t}
+              </span>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+/* ──────────────────────────────────── PERSONA PICKER ─────────────────────────────────── */
+
+function PersonaPicker({
+  onSelectPersona,
+}: {
+  onSelectPersona: (persona: PersonaConfig, lang: LanguageCode) => void;
+}) {
+  const { personas, setPersonas, callState } = useStore();
+  const [langs, setLangs] = useState<Record<string, LanguageCode>>({});
 
   useEffect(() => {
     const fetchPersonas = async () => {
@@ -41,8 +145,14 @@ export default function Page() {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
         const res = await fetch(`${apiUrl}/personas`);
         if (res.ok) {
-          const data = await res.json();
+          const data: PersonaConfig[] = await res.json();
           setPersonas(data);
+          // Initialise per-card language selection
+          const initial: Record<string, LanguageCode> = {};
+          data.forEach((p) => {
+            initial[p.id] = p.default_language;
+          });
+          setLangs(initial);
         }
       } catch (e) {
         console.error('Failed to fetch personas', e);
@@ -51,209 +161,232 @@ export default function Page() {
     fetchPersonas();
   }, [setPersonas]);
 
-  const handleStartCall = async (persona: PersonaConfig, lang: string) => {
-    setMicError(false);
-    setPersona(persona);
-    setLanguage(lang as any);
+  const sectionRef = useRef(null);
+  const inView = useInView(sectionRef, { once: true, margin: '-100px' });
 
-    const capture = new AudioCapture();
-    const hasPerm = await capture.requestPermission();
-    if (!hasPerm) {
-      setMicError(true);
-      return;
-    }
-    captureRef.current = capture;
+  return (
+    <section id="personas" className="py-24 px-6 lg:px-12" ref={sectionRef}>
+      <div className="max-w-5xl mx-auto">
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="text-[32px] font-semibold text-text-primary text-center mb-12"
+        >
+          Pick someone to talk to
+        </motion.h2>
 
-    const player = new AudioPlayer();
-    playerRef.current = player;
-
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      const res = await fetch(`${apiUrl}/sessions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          persona_id: persona.id,
-          language: lang
-        })
-      });
-      
-      if (!res.ok) {
-        console.error('Failed to create session');
-        return;
-      }
-      
-      const sessionData = await res.json();
-      startCall(sessionData.session_id);
-
-      const wsBaseUrl = apiUrl.replace('http', 'ws');
-      const wsClient = new VoiceWSClient(wsBaseUrl);
-      wsClientRef.current = wsClient;
-
-      wsClient.onConnect = () => {
-        wsClient.sendJSON({
-          type: 'session_config',
-          persona: persona.id,
-          language: lang
-        });
-      };
-
-      wsClient.onTranscript = (speaker, text) => {
-        appendTranscript({ speaker: speaker as any, text, timestamp: new Date() });
-      };
-
-      wsClient.onAgentState = (state) => {
-        setAgentState(state as any);
-      };
-
-      wsClient.onAudioChunk = (base64) => {
-        player.play(base64);
-      };
-
-      wsClient.onLanguageSwitched = (lang) => {
-        setLanguage(lang as any);
-      };
-
-      wsClient.onDisconnect = () => {
-        handleEndCall();
-      };
-
-      wsClient.onError = (code, message) => {
-        console.error(`WS Error [${code}]: ${message}`);
-      };
-
-      wsClient.connect(sessionData.session_id);
-    } catch (e) {
-      console.error('Failed to start call', e);
-    }
-  };
-
-  const handleEndCall = () => {
-    if (wsClientRef.current) {
-      wsClientRef.current.disconnect();
-      wsClientRef.current = null;
-    }
-    endCall();
-  };
-
-  const handleMouseDown = () => {
-    if (captureRef.current) {
-      captureRef.current.startRecording();
-    }
-  };
-
-  const handleMouseUp = async () => {
-    if (captureRef.current && wsClientRef.current) {
-      try {
-        const blob = await captureRef.current.stopRecording();
-        wsClientRef.current.sendAudio(blob);
-      } catch (e) {
-        console.error('Error sending audio', e);
-      }
-    }
-  };
-
-  if (callState === 'idle') {
-    return (
-      <div style={{ padding: 20, fontFamily: 'sans-serif' }}>
-        <h1>Test Personas</h1>
-        {micError && <p style={{ color: 'red' }}>Mic permission denied. Please allow microphone access.</p>}
-        <div style={{ display: 'flex', gap: '20px', marginTop: 20, flexWrap: 'wrap' }}>
-          {personas.map(p => (
-            <div key={p.id} style={{ border: '1px solid #ccc', padding: '15px', borderRadius: '8px' }}>
-              <h3>{p.display_name}</h3>
-              <p style={{ fontSize: '14px', color: '#666' }}>{p.role}</p>
-              
-              <div style={{ marginTop: '10px', marginBottom: '10px', display: 'flex', gap: '5px' }}>
-                {p.languages.map(lang => (
-                  <button
-                    key={lang}
-                    onClick={() => {
-                      setSelectedPreCallPersona(p);
-                      setPreCallLanguage(lang);
-                    }}
-                    style={{
-                      padding: '5px 10px',
-                      cursor: 'pointer',
-                      background: selectedPreCallPersona?.id === p.id && preCallLanguage === lang ? '#7C5CFF' : '#eee',
-                      color: selectedPreCallPersona?.id === p.id && preCallLanguage === lang ? 'white' : 'black',
-                      border: 'none',
-                      borderRadius: '15px'
-                    }}
-                  >
-                    {LABELS[lang as keyof typeof LABELS] || lang}
-                  </button>
-                ))}
-              </div>
-
-              <button 
-                onClick={() => handleStartCall(p, selectedPreCallPersona?.id === p.id && preCallLanguage ? preCallLanguage : p.default_language)}
-                style={{ padding: '8px 16px', cursor: 'pointer', background: '#34D399', border: 'none', borderRadius: '4px' }}
-              >
-                Start Call
-              </button>
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {personas.map((p, i) => (
+            <motion.div
+              key={p.id}
+              initial={{ opacity: 0, y: 24 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5, delay: i * 0.1, ease: 'easeOut' }}
+            >
+              <PersonaCard
+                persona={p}
+                isSelected={false}
+                isDisabled={callState === 'active'}
+                selectedLanguage={langs[p.id] || p.default_language}
+                onLanguageChange={(lang) =>
+                  setLangs((prev) => ({ ...prev, [p.id]: lang }))
+                }
+                onTalk={() => onSelectPersona(p, langs[p.id] || p.default_language)}
+              />
+            </motion.div>
           ))}
         </div>
       </div>
-    );
-  }
+    </section>
+  );
+}
+
+/* ─────────────────────────────────── HOW IT WORKS ────────────────────────────────────── */
+
+const STEPS = [
+  {
+    icon: MousePointerClick,
+    title: 'Pick your agent',
+    desc: 'Choose a persona that fits your use case — loan recovery, insurance, or appointments.',
+  },
+  {
+    icon: Mic,
+    title: 'Speak naturally',
+    desc: 'In English, Hindi, or Telugu — or switch mid-call. No typing required.',
+  },
+  {
+    icon: Sparkles,
+    title: 'AI responds',
+    desc: 'In real time, under 2 seconds. With tool access to look up data and take actions.',
+  },
+];
+
+function HowItWorks() {
+  const sectionRef = useRef(null);
+  const inView = useInView(sectionRef, { once: true, margin: '-100px' });
 
   return (
-    <div style={{ padding: 20, fontFamily: 'sans-serif' }}>
-      <h2>Call Active: {selectedPersona?.display_name}</h2>
-      <p>State: <strong style={{ color: agentState === 'listening' ? 'green' : agentState === 'speaking' ? 'blue' : 'orange'}}>{agentState}</strong> | Language: <strong>{currentLanguage}</strong></p>
-      
-      <div style={{ marginTop: 10 }}>
-        <strong>Switch Language: </strong>
-        {selectedPersona?.languages.map(lang => (
-          <button
-            key={lang}
-            onClick={() => {
-              if (wsClientRef.current) {
-                wsClientRef.current.sendJSON({ type: 'language_switch', language: lang });
-              }
-            }}
-            disabled={lang === currentLanguage}
-            style={{
-              padding: '5px 10px', marginLeft: 5, cursor: lang === currentLanguage ? 'not-allowed' : 'pointer',
-              background: lang === currentLanguage ? '#7C5CFF' : '#eee',
-              color: lang === currentLanguage ? 'white' : 'black',
-              border: 'none', borderRadius: '15px'
-            }}
-          >
-            {LABELS[lang as keyof typeof LABELS] || lang}
-          </button>
-        ))}
-      </div>
-
-      <div style={{ margin: '20px 0', padding: 10, border: '1px solid #ccc', height: 400, overflowY: 'auto' }}>
-        {transcript.map((line) => (
-          <div key={line.id} style={{ marginBottom: 10 }}>
-            <strong style={{ color: line.speaker === 'agent' ? 'blue' : 'green' }}>
-              {line.speaker === 'agent' ? selectedPersona?.display_name || 'Agent' : 'You'}:
-            </strong> {line.text}
-          </div>
-        ))}
-      </div>
-
-      <div style={{ display: 'flex', gap: '10px' }}>
-        <button 
-          onMouseDown={handleMouseDown} 
-          onMouseUp={handleMouseUp}
-          onTouchStart={handleMouseDown}
-          onTouchEnd={handleMouseUp}
-          style={{ padding: '15px 30px', cursor: 'pointer', background: '#e0e0e0', border: '1px solid #999', fontSize: '16px' }}
+    <section
+      id="how-it-works"
+      ref={sectionRef}
+      className="py-24 px-6 lg:px-12 border-t border-border-subtle"
+    >
+      <div className="max-w-5xl mx-auto">
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="text-[32px] font-semibold text-text-primary text-center mb-16"
         >
-          Hold to Speak
-        </button>
-        <button 
-          onClick={handleEndCall} 
-          style={{ padding: '15px 30px', color: 'white', background: 'red', border: 'none', cursor: 'pointer', fontSize: '16px' }}
-        >
-          End Call
-        </button>
+          How it works
+        </motion.h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+          {STEPS.map((step, i) => {
+            const Icon = step.icon;
+            return (
+              <motion.div
+                key={step.title}
+                initial={{ opacity: 0, y: 24 }}
+                animate={inView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.5, delay: i * 0.15, ease: 'easeOut' }}
+                className="flex flex-col items-center text-center gap-4"
+              >
+                {/* Number badge */}
+                <span className="w-10 h-10 rounded-full border-2 border-accent text-accent text-sm font-semibold flex items-center justify-center">
+                  {i + 1}
+                </span>
+
+                {/* Icon */}
+                <div className="w-14 h-14 rounded-2xl bg-accent-dim flex items-center justify-center">
+                  <Icon size={24} className="text-accent" />
+                </div>
+
+                <h3 className="text-lg font-semibold text-text-primary">{step.title}</h3>
+                <p className="text-sm text-text-secondary leading-relaxed max-w-[260px]">
+                  {step.desc}
+                </p>
+              </motion.div>
+            );
+          })}
+        </div>
       </div>
-    </div>
+    </section>
+  );
+}
+
+/* ─────────────────────────────────── BUILT WITH ──────────────────────────────────────── */
+
+const TECH_STACK = [
+  { name: 'Sarvam AI', accent: '#06B6D4' },
+  { name: 'Gemini', accent: '#A78BFA' },
+  { name: 'FastAPI', accent: '#34D399' },
+  { name: 'Next.js', accent: '#F5F5F7' },
+];
+
+function BuiltWith() {
+  const sectionRef = useRef(null);
+  const inView = useInView(sectionRef, { once: true, margin: '-80px' });
+
+  return (
+    <section
+      id="tech"
+      ref={sectionRef}
+      className="py-24 px-6 lg:px-12 border-t border-border-subtle"
+    >
+      <div className="max-w-4xl mx-auto text-center">
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="text-[32px] font-semibold text-text-primary mb-4"
+        >
+          Built with the best infrastructure
+          <br />
+          for Indian voice AI
+        </motion.h2>
+
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5, delay: 0.15, ease: 'easeOut' }}
+          className="flex flex-wrap justify-center gap-4 mt-12"
+        >
+          {TECH_STACK.map((tech) => (
+            <div
+              key={tech.name}
+              className="flex items-center gap-2 px-6 py-3 rounded-2xl border border-border-subtle bg-bg-card"
+            >
+              <span
+                className="w-3 h-3 rounded-full shrink-0"
+                style={{ backgroundColor: tech.accent }}
+              />
+              <span className="text-sm font-medium text-text-primary">{tech.name}</span>
+            </div>
+          ))}
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+/* ─────────────────────────────────── FOOTER ──────────────────────────────────────────── */
+
+function Footer() {
+  return (
+    <footer className="py-12 px-6 border-t border-border-subtle text-center">
+      <p className="text-sm text-text-secondary">
+        SolnixMedia · 2026 · Proof of Concept
+      </p>
+      <p className="text-xs text-text-tertiary mt-2">
+        Response times may vary. This is a proof of concept.
+      </p>
+    </footer>
+  );
+}
+
+/* ─────────────────────────────────── PAGE ROOT ───────────────────────────────────────── */
+
+export default function Page() {
+  const [activeCall, setActiveCall] = useState<{
+    persona: PersonaConfig;
+    language: LanguageCode;
+  } | null>(null);
+
+  const { setPersona, clearTranscript } = useStore();
+
+  const handleSelectPersona = (persona: PersonaConfig, lang: LanguageCode) => {
+    setPersona(persona);
+    clearTranscript();
+    setActiveCall({ persona, language: lang });
+  };
+
+  const handleCloseCall = () => {
+    setActiveCall(null);
+  };
+
+  return (
+    <>
+      <Nav />
+      <main className="bg-bg-base">
+        <Hero />
+        <PersonaPicker onSelectPersona={handleSelectPersona} />
+        <HowItWorks />
+        <BuiltWith />
+      </main>
+      <Footer />
+
+      {/* Call Overlay — rendered at root level */}
+      <AnimatePresence>
+        {activeCall && (
+          <CallOverlay
+            persona={activeCall.persona}
+            selectedLanguage={activeCall.language}
+            onClose={handleCloseCall}
+          />
+        )}
+      </AnimatePresence>
+    </>
   );
 }

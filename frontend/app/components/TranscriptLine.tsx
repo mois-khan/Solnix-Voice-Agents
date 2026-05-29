@@ -34,13 +34,16 @@ export default function TranscriptLine({ line }: TranscriptLineProps) {
       initial={{ y: 8, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.25, ease: 'easeOut' }}
-      className="group relative flex gap-3 items-start py-2"
+      className={`
+        group relative flex gap-4 items-start py-3 px-4 rounded-xl transition-colors duration-200
+        ${isAgent ? 'bg-white/[0.02] hover:bg-white/[0.04]' : 'hover:bg-white/[0.02]'}
+      `}
     >
       {/* Speaker label */}
       <span
         className={`
-          w-10 shrink-0 text-[11px] uppercase tracking-wide font-medium
-          ${isAgent ? 'text-accent-light' : 'text-text-tertiary'}
+          w-12 pt-0.5 shrink-0 text-[11px] uppercase tracking-wider font-semibold
+          ${isAgent ? 'text-accent-light drop-shadow-sm' : 'text-text-secondary'}
         `}
       >
         {speakerLabel}
@@ -49,15 +52,16 @@ export default function TranscriptLine({ line }: TranscriptLineProps) {
       {/* Text */}
       <span
         className={`
-          flex-1 leading-relaxed
-          ${indic ? 'font-noto text-sm' : 'font-mono text-[13px]'}
+          flex-1 leading-relaxed tracking-wide
+          ${indic ? 'font-noto text-[16px]' : 'font-mono text-[15px]'}
+          ${isAgent ? 'text-white' : 'text-text-primary/90'}
         `}
       >
         {line.text}
       </span>
 
       {/* Timestamp — visible on row hover */}
-      <span className="absolute right-2 top-2 text-[11px] text-text-tertiary opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+      <span className="absolute right-4 top-3.5 text-[11px] text-text-tertiary opacity-0 group-hover:opacity-100 transition-opacity duration-150">
         {formatTime(line.timestamp)}
       </span>
     </motion.div>

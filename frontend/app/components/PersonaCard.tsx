@@ -74,74 +74,88 @@ export default function PersonaCard({
         transformPerspective: 800,
       }}
       className={`
-        flex flex-col items-center gap-4 p-6 rounded-2xl border
-        transition-shadow duration-200
+        relative overflow-hidden flex flex-col items-center gap-4 p-6 rounded-[20px]
+        transition-all duration-300 border
         ${isDisabled
           ? 'pointer-events-none opacity-40'
           : ''
         }
         ${isSelected
           ? 'ring-2 ring-accent bg-accent-dim border-accent'
-          : 'bg-bg-card border-border-subtle hover:bg-bg-card-hover'
+          : 'bg-bg-elevated/40 backdrop-blur-xl border-white/5 hover:bg-bg-elevated/60 shadow-lg'
         }
       `}
       whileHover={
         !isDisabled
           ? {
               boxShadow:
-                '0 1px 3px rgba(0,0,0,0.4), 0 4px 24px rgba(124,92,255,0.15), inset 0 0 0 1px rgba(124,92,255,0.2)',
+                '0 20px 40px -10px rgba(0,0,0,0.5), 0 0 40px rgba(124,92,255,0.15), inset 0 1px 0 rgba(255,255,255,0.1)',
+              y: -4
             }
           : undefined
       }
     >
-      {/* Avatar */}
-      <AvatarFallback name={persona.display_name} size={80} />
+      {/* Glare effect */}
+      <motion.div
+        className="pointer-events-none absolute inset-0 z-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        style={{
+          background: 'radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, transparent 60%)',
+          x: springX,
+          y: springY,
+        }}
+      />
+      
+      {/* Inner Content needs relative z-10 so it's above glare */}
+      <div className="relative z-10 flex flex-col items-center gap-4 w-full">
+        {/* Avatar */}
+        <AvatarFallback name={persona.display_name} size={80} />
 
-      {/* Name */}
-      <h3 className="text-lg font-semibold text-text-primary text-center">
-        {persona.display_name}
-      </h3>
+        {/* Name */}
+        <h3 className="text-xl font-bold text-text-primary text-center">
+          {persona.display_name}
+        </h3>
 
-      {/* Role */}
-      <span className="text-xs uppercase tracking-widest text-text-secondary text-center">
-        {persona.role}
-      </span>
+        {/* Role */}
+        <span className="text-[11px] font-bold uppercase tracking-widest text-accent-light text-center drop-shadow-sm">
+          {persona.role}
+        </span>
 
-      {/* Blurb */}
-      <p className="text-sm text-text-secondary text-center line-clamp-2">
-        {persona.short_blurb}
-      </p>
+        {/* Blurb */}
+        <p className="text-[14px] text-text-secondary text-center line-clamp-2 leading-relaxed">
+          {persona.short_blurb}
+        </p>
 
-      {/* Language pills */}
-      <div className="flex gap-2 flex-wrap justify-center">
-        {persona.languages.map((lang) => (
-          <LanguagePill
-            key={lang}
-            code={lang}
-            isActive={selectedLanguage === lang}
-            isDisabled={isDisabled}
-            onClick={() => onLanguageChange(lang)}
-          />
-        ))}
+        {/* Language pills */}
+        <div className="flex gap-2 flex-wrap justify-center mt-2">
+          {persona.languages.map((lang) => (
+            <LanguagePill
+              key={lang}
+              code={lang}
+              isActive={selectedLanguage === lang}
+              isDisabled={isDisabled}
+              onClick={() => onLanguageChange(lang)}
+            />
+          ))}
+        </div>
+
+        {/* Talk button */}
+        <button
+          type="button"
+          onClick={onTalk}
+          disabled={isDisabled}
+          className={`
+            w-full h-12 mt-2 rounded-xl font-bold text-[15px] text-white
+            bg-gradient-to-r from-accent to-accent-light shadow-md
+            ${isDisabled
+              ? 'opacity-50 cursor-not-allowed'
+              : 'cursor-pointer hover:shadow-lg hover:shadow-accent/20 hover:brightness-110 active:scale-[0.98]'
+            }
+            transition-all duration-200
+          `}
+        >
+          Talk →
+        </button>
       </div>
-
-      {/* Talk button */}
-      <button
-        type="button"
-        onClick={onTalk}
-        disabled={isDisabled}
-        className={`
-          w-full h-11 rounded-xl font-medium text-sm text-white
-          bg-accent
-          ${isDisabled
-            ? 'opacity-50 cursor-not-allowed'
-            : 'cursor-pointer hover:brightness-110 active:scale-[0.98]'
-          }
-          transition-all duration-150
-        `}
-      >
-        Talk →
-      </button>
     </motion.div>
   );
 }
