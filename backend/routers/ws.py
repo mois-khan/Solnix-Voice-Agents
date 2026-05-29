@@ -274,10 +274,14 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                     new_lang = data.get("language")
                     session.language = new_lang
                     
-                    if session.conversation_history and session.conversation_history[-1]["role"] == "model":
-                        session.conversation_history[-1]["parts"].append({"text": f"\n[Language switched to {new_lang}]"})
+                    lang_names = {"en-IN": "English", "hi-IN": "Hindi", "te-IN": "Telugu"}
+                    lang_name = lang_names.get(new_lang, new_lang)
+                    instruction = f"[SYSTEM_ALERT: The user explicitly switched the language to {lang_name}. You MUST respond entirely in {lang_name} going forward.]"
+                    
+                    if session.conversation_history and session.conversation_history[-1]["role"] == "user":
+                        session.conversation_history[-1]["parts"].append({"text": f"\n{instruction}"})
                     else:
-                        session.conversation_history.append({"role": "model", "parts": [{"text": f"[Language switched to {new_lang}]"}]})
+                        session.conversation_history.append({"role": "user", "parts": [{"text": instruction}]})
                         
                     await websocket.send_json({"type": "language_switched", "language": new_lang})
                     

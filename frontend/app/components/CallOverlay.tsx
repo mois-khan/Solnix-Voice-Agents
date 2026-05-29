@@ -228,6 +228,7 @@ export default function CallOverlay({ persona, selectedLanguage, onClose }: Call
   }, [initSession]);
 
   const handleClose = useCallback(() => {
+    playerRef.current?.stop();
     sessionIdRef.current = null;
     wsClientRef.current?.disconnect();
     wsClientRef.current = null;
@@ -242,6 +243,7 @@ export default function CallOverlay({ persona, selectedLanguage, onClose }: Call
   }, [currentLanguage]);
 
   const handleStartSpeaking = useCallback(() => {
+    playerRef.current?.stop(); // Interrupt agent
     captureRef.current?.startRecording();
   }, []);
 

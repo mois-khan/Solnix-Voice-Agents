@@ -1,6 +1,6 @@
 export class AudioPlayer {
   private ctx: AudioContext;
-  private outputAnalyser: AnalyserNode;
+  private sourceNode: AudioBufferSourceNode | null = null;
 
   constructor() {
     this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -10,6 +10,8 @@ export class AudioPlayer {
   }
 
   public async play(base64wav: string): Promise<void> {
+    this.stop(); // Stop any currently playing audio before starting new one
+
     if (this.ctx.state === 'suspended') {
       await this.ctx.resume();
     }
@@ -23,11 +25,23 @@ export class AudioPlayer {
     const arrayBuffer = bytes.buffer;
 
     const audioBuffer = await this.ctx.decodeAudioData(arrayBuffer);
-    const source = this.ctx.createBufferSource();
-    source.buffer = audioBuffer;
+    this.sourceNode = this.ctx.createBufferSource();
+    this.sourceNode.buffer = audioBuffer;
     
-    source.connect(this.outputAnalyser);
-    source.start(0);
+    this.sourceNode.connect(this.outputAnalyser);
+    this.sourceNode.start(0);
+  }
+
+  public stop(): void {
+    if (this.sourceNode) {
+      try {
+        this.sourceNode.stop();
+        this.sourceNode.disconnect();
+      } catch (e) {
+        // Ignore if already stopped
+      }
+      this.sourceNode = null;
+    }
   }
 
   public getOutputAnalyser(): AnalyserNode {

@@ -9,6 +9,7 @@ import { useStore } from '../lib/store';
 import VoiceOrb from './components/VoiceOrb';
 import PersonaCard from './components/PersonaCard';
 import CallOverlay from './components/CallOverlay';
+import BackgroundAurora from './components/BackgroundAurora';
 
 /* ───────────────────────────────────────── NAV ───────────────────────────────────────── */
 
@@ -26,7 +27,7 @@ function Nav() {
       className={`
         fixed top-0 left-0 right-0 z-40 h-16 flex items-center justify-between px-6 lg:px-12
         transition-colors duration-300
-        ${scrolled ? 'backdrop-blur-md bg-bg-base/80 border-b border-border-subtle' : 'bg-transparent'}
+        ${scrolled ? 'backdrop-blur-xl bg-bg-base/60 border-b border-border-subtle' : 'bg-transparent'}
       `}
     >
       <a href="#" className="text-xl font-bold text-accent tracking-tight">
@@ -65,10 +66,6 @@ function Nav() {
 function Hero() {
   return (
     <section className="relative min-h-[90vh] flex items-center pt-16 px-6 lg:px-12 overflow-hidden">
-      {/* Floating Background Blobs for Depth */}
-      <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent/20 rounded-full blur-[120px] pointer-events-none z-0" />
-      <div className="absolute top-1/2 right-1/4 translate-x-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none z-0" />
-
       <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-20 relative z-10">
         {/* Orb */}
         <motion.div
@@ -89,13 +86,13 @@ function Hero() {
           transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
           className="lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left gap-6"
         >
-          <span className="text-xs uppercase tracking-widest text-text-tertiary font-medium">
+          <span className="text-xs uppercase tracking-widest text-text-tertiary font-medium bg-white/[0.05] backdrop-blur-md px-3 py-1 rounded-pill border border-white/10">
             AI Voice Agents · POC by SolnixMedia
           </span>
 
           <h1 className="text-[40px] md:text-[56px] lg:text-[64px] font-bold leading-[1.05] text-text-primary">
             Talk to an AI voice agent.{' '}
-            <span className="text-accent">In your language.</span>
+            <span className="text-accent drop-shadow-sm">In your language.</span>
           </h1>
 
           <p className="text-lg text-text-secondary max-w-lg leading-relaxed">
@@ -107,7 +104,7 @@ function Hero() {
           <a
             href="#personas"
             className="inline-flex items-center gap-2 h-12 px-8 rounded-xl bg-accent text-white font-medium
-                       hover:brightness-110 active:scale-[0.98] transition-all duration-150"
+                       hover:brightness-110 active:scale-[0.98] shadow-lg shadow-accent/20 transition-all duration-150"
           >
             Start a call ↓
           </a>
@@ -117,7 +114,7 @@ function Hero() {
             {['Sarvam AI', 'Gemini', 'FastAPI'].map((t) => (
               <span
                 key={t}
-                className="text-[11px] font-medium px-3 py-1 rounded-pill border border-border-subtle text-text-tertiary"
+                className="text-[11px] font-medium px-3 py-1 rounded-pill border border-border-subtle bg-bg-card/50 backdrop-blur-sm text-text-tertiary"
               >
                 {t}
               </span>
@@ -165,13 +162,13 @@ function PersonaPicker({
   const inView = useInView(sectionRef, { once: true, margin: '-100px' });
 
   return (
-    <section id="personas" className="py-24 px-6 lg:px-12" ref={sectionRef}>
-      <div className="max-w-5xl mx-auto">
+    <section id="personas" className="py-24 px-6 lg:px-12 relative overflow-hidden backdrop-blur-2xl bg-bg-base/60 border-t border-white/5" ref={sectionRef}>
+      <div className="max-w-5xl mx-auto relative z-10">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="text-[32px] font-semibold text-text-primary text-center mb-12"
+          className="text-[32px] font-semibold text-text-primary text-center mb-12 drop-shadow-sm"
         >
           Pick someone to talk to
         </motion.h2>
@@ -230,14 +227,14 @@ function HowItWorks() {
     <section
       id="how-it-works"
       ref={sectionRef}
-      className="py-24 px-6 lg:px-12 border-t border-border-subtle"
+      className="py-24 px-6 lg:px-12 backdrop-blur-3xl bg-bg-base/70 border-t border-white/5"
     >
       <div className="max-w-5xl mx-auto">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="text-[32px] font-semibold text-text-primary text-center mb-16"
+          className="text-[32px] font-semibold text-text-primary text-center mb-16 drop-shadow-sm"
         >
           How it works
         </motion.h2>
@@ -251,20 +248,23 @@ function HowItWorks() {
                 initial={{ opacity: 0, y: 24 }}
                 animate={inView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.5, delay: i * 0.15, ease: 'easeOut' }}
-                className="flex flex-col items-center text-center gap-4"
+                className="flex flex-col items-center text-center gap-4 relative group"
               >
+                {/* Glow behind icon */}
+                <div className="absolute top-10 w-24 h-24 bg-accent/20 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                
                 {/* Number badge */}
-                <span className="w-10 h-10 rounded-full border-2 border-accent text-accent text-sm font-semibold flex items-center justify-center">
+                <span className="w-10 h-10 rounded-full border-2 border-accent text-accent text-sm font-semibold flex items-center justify-center relative z-10 bg-bg-base/50 backdrop-blur-sm">
                   {i + 1}
                 </span>
 
                 {/* Icon */}
-                <div className="w-14 h-14 rounded-2xl bg-accent-dim flex items-center justify-center">
+                <div className="w-14 h-14 rounded-2xl bg-white/[0.03] backdrop-blur-xl flex items-center justify-center relative z-10 ring-1 ring-white/10 group-hover:ring-accent/50 group-hover:bg-white/[0.08] transition-all">
                   <Icon size={24} className="text-accent" />
                 </div>
 
-                <h3 className="text-lg font-semibold text-text-primary">{step.title}</h3>
-                <p className="text-sm text-text-secondary leading-relaxed max-w-[260px]">
+                <h3 className="text-lg font-semibold text-text-primary relative z-10">{step.title}</h3>
+                <p className="text-sm text-text-secondary leading-relaxed max-w-[260px] relative z-10">
                   {step.desc}
                 </p>
               </motion.div>
@@ -293,14 +293,14 @@ function BuiltWith() {
     <section
       id="tech"
       ref={sectionRef}
-      className="py-24 px-6 lg:px-12 border-t border-border-subtle"
+      className="py-32 px-6 lg:px-12 backdrop-blur-3xl bg-bg-base/80 border-t border-white/5 relative overflow-hidden"
     >
-      <div className="max-w-4xl mx-auto text-center">
+      <div className="max-w-4xl mx-auto text-center relative z-10">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="text-[32px] font-semibold text-text-primary mb-4"
+          className="text-[32px] font-semibold text-text-primary mb-4 drop-shadow-sm"
         >
           Built with the best infrastructure
           <br />
@@ -316,11 +316,11 @@ function BuiltWith() {
           {TECH_STACK.map((tech) => (
             <div
               key={tech.name}
-              className="flex items-center gap-2 px-6 py-3 rounded-2xl border border-border-subtle bg-bg-card"
+              className="flex items-center gap-2 px-6 py-3 rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur-md shadow-lg"
             >
               <span
-                className="w-3 h-3 rounded-full shrink-0"
-                style={{ backgroundColor: tech.accent }}
+                className="w-3 h-3 rounded-full shrink-0 shadow-sm"
+                style={{ backgroundColor: tech.accent, boxShadow: `0 0 10px ${tech.accent}` }}
               />
               <span className="text-sm font-medium text-text-primary">{tech.name}</span>
             </div>
@@ -335,7 +335,7 @@ function BuiltWith() {
 
 function Footer() {
   return (
-    <footer className="py-12 px-6 border-t border-border-subtle text-center">
+    <footer className="py-12 px-6 border-t border-border-subtle bg-bg-base text-center relative z-10">
       <p className="text-sm text-text-secondary">
         SolnixMedia · 2026 · Proof of Concept
       </p>
@@ -368,13 +368,16 @@ export default function Page() {
 
   return (
     <>
+      <BackgroundAurora />
       <Nav />
-      <main>
+      
+      <main className="relative z-10">
         <Hero />
         <PersonaPicker onSelectPersona={handleSelectPersona} />
         <HowItWorks />
         <BuiltWith />
       </main>
+      
       <Footer />
 
       {/* Call Overlay — rendered at root level */}
