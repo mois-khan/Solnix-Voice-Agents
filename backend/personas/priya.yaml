@@ -1,4 +1,23 @@
 id: priya
-name: Priya
-role: Loan Assistant
-language: en-IN
+display_name: Priya
+role: Loan Recovery Agent
+avatar: /personas/priya.png
+short_blurb: "Polite reminder calls for overdue EMIs."
+languages:
+  - en-IN
+  - hi-IN
+default_language: en-IN
+llm:
+  model: gemini-2.0-flash
+  temperature: 0.4
+  max_output_tokens: 200
+system_prompt_file: prompts/priya.md
+tools:
+  - lookup_loan
+  - record_commitment
+default_context:
+  customer_name: "Rahul Sharma"
+  loan_id: "L-1042"
+  loan_type: "personal"
+  emi_amount: "12,500"
+  days_overdue: "18"
