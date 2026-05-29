@@ -9,6 +9,7 @@ export class VoiceWSClient {
   public onLanguageSwitched?: (language: string) => void;
   public onError?: (code: string, message: string) => void;
   public onDisconnect?: () => void;
+  public onConnect?: () => void;
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
@@ -52,6 +53,10 @@ export class VoiceWSClient {
 
     this.ws.onclose = () => {
       if (this.onDisconnect) this.onDisconnect();
+    };
+
+    this.ws.onopen = () => {
+      if (this.onConnect) this.onConnect();
     };
 
     this.ws.onerror = (err) => {
