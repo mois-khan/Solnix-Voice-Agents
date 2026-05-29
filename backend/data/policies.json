@@ -1,1 +1,13 @@
-[]
+[
+  {
+    "policy_id": "P-7781",
+    "customer_name": "Ananya Reddy",
+    "policy_type": "health",
+    "expiry_date": "2026-06-15",
+    "renewal_premium": 18400,
+    "previous_premium": 17200,
+    "no_claim_bonus_pct": 25,
+    "family_members_covered": 4,
+    "renewal_link_sent": false
+  }
+]

@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "loan_id": "L-1042",
+    "customer_name": "Rahul Sharma",
+    "loan_type": "personal",
+    "emi_amount": 12500,
+    "days_overdue": 18,
+    "outstanding_balance": 187000,
+    "phone": "+91-9900001042",
+    "commitments": []
+  }
+]
