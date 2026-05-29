@@ -3,11 +3,11 @@ import httpx
 from config import settings
 
 VOICE_MAP = {
-    ("priya", "en-IN"): "priya",
-    ("priya", "hi-IN"): "priya",
-    ("arjun", "en-IN"): "aditya",
-    ("arjun", "hi-IN"): "aditya",
-    ("arjun", "te-IN"): "aditya",
+    ("priya", "en-IN"): "manisha",
+    ("priya", "hi-IN"): "manisha",
+    ("arjun", "en-IN"): "abhilash",
+    ("arjun", "hi-IN"): "abhilash",
+    ("arjun", "te-IN"): "abhilash",
     ("meera", "en-IN"): "vidya",
     ("meera", "hi-IN"): "vidya",
     ("meera", "te-IN"): "vidya",

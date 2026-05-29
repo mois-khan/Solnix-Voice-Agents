@@ -25,6 +25,10 @@ export default function Page() {
   } = useStore();
 
   const [micError, setMicError] = useState(false);
+  const [selectedPreCallPersona, setSelectedPreCallPersona] = useState<PersonaConfig | null>(null);
+  const [preCallLanguage, setPreCallLanguage] = useState<string | null>(null);
+
+  const LABELS = { 'en-IN': 'EN', 'hi-IN': 'हि', 'te-IN': 'తె' };
 
   // Maintain instances across renders
   const wsClientRef = useRef<VoiceWSClient | null>(null);
@@ -47,9 +51,10 @@ export default function Page() {
     fetchPersonas();
   }, [setPersonas]);
 
-  const handleStartCall = async (persona: PersonaConfig) => {
+  const handleStartCall = async (persona: PersonaConfig, lang: string) => {
     setMicError(false);
     setPersona(persona);
+    setLanguage(lang as any);
 
     const capture = new AudioCapture();
     const hasPerm = await capture.requestPermission();
@@ -69,7 +74,7 @@ export default function Page() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           persona_id: persona.id,
-          language: persona.default_language
+          language: lang
         })
       });
       
@@ -89,7 +94,7 @@ export default function Page() {
         wsClient.sendJSON({
           type: 'session_config',
           persona: persona.id,
-          language: persona.default_language
+          language: lang
         });
       };
 
@@ -153,15 +158,41 @@ export default function Page() {
       <div style={{ padding: 20, fontFamily: 'sans-serif' }}>
         <h1>Test Personas</h1>
         {micError && <p style={{ color: 'red' }}>Mic permission denied. Please allow microphone access.</p>}
-        <div style={{ display: 'flex', gap: '10px', marginTop: 20 }}>
+        <div style={{ display: 'flex', gap: '20px', marginTop: 20, flexWrap: 'wrap' }}>
           {personas.map(p => (
-            <button 
-              key={p.id} 
-              onClick={() => handleStartCall(p)}
-              style={{ padding: '10px 20px', cursor: 'pointer' }}
-            >
-              Call {p.display_name}
-            </button>
+            <div key={p.id} style={{ border: '1px solid #ccc', padding: '15px', borderRadius: '8px' }}>
+              <h3>{p.display_name}</h3>
+              <p style={{ fontSize: '14px', color: '#666' }}>{p.role}</p>
+              
+              <div style={{ marginTop: '10px', marginBottom: '10px', display: 'flex', gap: '5px' }}>
+                {p.languages.map(lang => (
+                  <button
+                    key={lang}
+                    onClick={() => {
+                      setSelectedPreCallPersona(p);
+                      setPreCallLanguage(lang);
+                    }}
+                    style={{
+                      padding: '5px 10px',
+                      cursor: 'pointer',
+                      background: selectedPreCallPersona?.id === p.id && preCallLanguage === lang ? '#7C5CFF' : '#eee',
+                      color: selectedPreCallPersona?.id === p.id && preCallLanguage === lang ? 'white' : 'black',
+                      border: 'none',
+                      borderRadius: '15px'
+                    }}
+                  >
+                    {LABELS[lang as keyof typeof LABELS] || lang}
+                  </button>
+                ))}
+              </div>
+
+              <button 
+                onClick={() => handleStartCall(p, selectedPreCallPersona?.id === p.id && preCallLanguage ? preCallLanguage : p.default_language)}
+                style={{ padding: '8px 16px', cursor: 'pointer', background: '#34D399', border: 'none', borderRadius: '4px' }}
+              >
+                Start Call
+              </button>
+            </div>
           ))}
         </div>
       </div>
@@ -173,6 +204,29 @@ export default function Page() {
       <h2>Call Active: {selectedPersona?.display_name}</h2>
       <p>State: <strong style={{ color: agentState === 'listening' ? 'green' : agentState === 'speaking' ? 'blue' : 'orange'}}>{agentState}</strong> | Language: <strong>{currentLanguage}</strong></p>
       
+      <div style={{ marginTop: 10 }}>
+        <strong>Switch Language: </strong>
+        {selectedPersona?.languages.map(lang => (
+          <button
+            key={lang}
+            onClick={() => {
+              if (wsClientRef.current) {
+                wsClientRef.current.sendJSON({ type: 'language_switch', language: lang });
+              }
+            }}
+            disabled={lang === currentLanguage}
+            style={{
+              padding: '5px 10px', marginLeft: 5, cursor: lang === currentLanguage ? 'not-allowed' : 'pointer',
+              background: lang === currentLanguage ? '#7C5CFF' : '#eee',
+              color: lang === currentLanguage ? 'white' : 'black',
+              border: 'none', borderRadius: '15px'
+            }}
+          >
+            {LABELS[lang as keyof typeof LABELS] || lang}
+          </button>
+        ))}
+      </div>
+
       <div style={{ margin: '20px 0', padding: 10, border: '1px solid #ccc', height: 400, overflowY: 'auto' }}>
         {transcript.map((line) => (
           <div key={line.id} style={{ marginBottom: 10 }}>

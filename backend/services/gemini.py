@@ -11,7 +11,7 @@ class GeminiClient:
         if not self.api_key:
             raise ValueError("GEMINI_API_KEY is not set in Settings.")
         
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={self.api_key}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key={self.api_key}"
         headers = {"Content-Type": "application/json"}
 
         response = await self.client.post(url, headers=headers, json=payload, timeout=30.0)

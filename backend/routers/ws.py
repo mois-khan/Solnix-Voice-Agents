@@ -147,6 +147,14 @@ async def pipeline(audio_bytes: bytes, session, ws: WebSocket):
             await ws.send_json({"type": "agent_state", "state": "listening"})
             return
             
+        await run_pipeline(transcript, session, ws)
+    except Exception as e:
+        await ws.send_json({"type": "error", "code": "pipeline_failed", "message": str(e)})
+        await ws.send_json({"type": "agent_state", "state": "idle"})
+
+async def run_pipeline(transcript: str, session, ws: WebSocket):
+    try:
+            
         # 2. Send transcript (user)
         await ws.send_json({"type": "transcript", "speaker": "user", "text": transcript})
         
@@ -187,7 +195,7 @@ async def pipeline(audio_bytes: bytes, session, ws: WebSocket):
         await ws.send_json({"type": "agent_state", "state": "speaking"})
         
         # 11. Synthesize TTS
-        speaker = VOICE_MAP.get((session.persona_id, session.language), "priya")
+        speaker = VOICE_MAP.get((session.persona_id, session.language), "manisha")
         wav_base64 = await tts_client.synthesize(response_text, session.language, speaker)
         
         # 12. Send audio chunk
@@ -238,7 +246,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
         
         await websocket.send_json({"type": "agent_state", "state": "speaking"})
         
-        speaker = VOICE_MAP.get((persona_id, language), "priya")
+        speaker = VOICE_MAP.get((persona_id, language), "manisha")
         wav_base64 = await tts_client.synthesize(response_text, language, speaker)
         
         await websocket.send_json({"type": "transcript", "speaker": "agent", "text": response_text})
@@ -275,6 +283,12 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                     
                 elif msg_type == "session_end":
                     break
+                    
+                elif msg_type == "text_input":
+                    text = data.get("text")
+                    if text:
+                        await run_pipeline(text, session, websocket)
+                    
                     
     except WebSocketDisconnect:
         pass

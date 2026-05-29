@@ -8,7 +8,7 @@ languages:
   - hi-IN
 default_language: en-IN
 llm:
-  model: gemini-2.0-flash
+  model: gemini-3.1-flash-lite
   temperature: 0.4
   max_output_tokens: 200
 system_prompt_file: prompts/priya.md

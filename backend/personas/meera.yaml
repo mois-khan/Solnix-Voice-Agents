@@ -9,8 +9,8 @@ languages:
   - te-IN
 default_language: en-IN
 llm:
-  model: gemini-2.0-flash
-  temperature: 0.5
+  model: gemini-3.1-flash-lite
+  temperature: 0.45
   max_output_tokens: 200
 system_prompt_file: prompts/meera.md
 tools:

@@ -3,10 +3,10 @@ name: gemini-tools
 description: Use when writing Gemini API calls, especially function calling / tool use. Covers the exact two-call pattern required for tool execution, history format, and error handling.
 ---
 
-# Gemini 2.0 Flash API Reference (REST)
+# Gemini 3.1 Flash Lite API Reference (REST)
 
 ## Endpoint
-POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}
+POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key={GEMINI_API_KEY}
 Content-Type: application/json
 
 ## Conversation History Format

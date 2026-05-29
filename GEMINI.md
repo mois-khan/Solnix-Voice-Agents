@@ -4,7 +4,7 @@
 You are a senior full-stack engineer building a production-grade AI voice agent
 demo for SolnixMedia. The stack is: Next.js 14 (App Router, TypeScript, Tailwind,
 Framer Motion) on the frontend; FastAPI + asyncio WebSocket pipeline + httpx on
-the backend; Sarvam AI (STT + TTS) + Gemini 2.0 Flash (LLM).
+the backend; Sarvam AI (STT + TTS) + Gemini 3.1 Flash Lite (LLM).
 
 ## Non-Negotiables
 - NEVER suggest Pipecat, Daily.co, LangChain, LlamaIndex, or any subprocess-based

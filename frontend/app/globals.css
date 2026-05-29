@@ -3,25 +3,51 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* ── Backgrounds ── */
+  --color-bg-base:       #0A0A0B;
+  --color-bg-elevated:   #141416;
+  --color-bg-card:       #1C1C1F;
+  --color-bg-card-hover: #222226;
+
+  /* ── Borders ── */
+  --color-border-subtle: #2A2A2E;
+  --color-border-accent: #7C5CFF44;
+
+  /* ── Text ── */
+  --color-text-primary:   #F5F5F7;
+  --color-text-secondary: #9A9AA0;
+  --color-text-tertiary:  #6B6B72;
+
+  /* ── Accent — the "voice" color ── */
+  --color-accent:       #7C5CFF;
+  --color-accent-light: #A78BFA;
+  --color-accent-dim:   #7C5CFF22;
+
+  /* ── Semantic ── */
+  --color-success: #34D399;
+  --color-warn:    #FBBF24;
+  --color-danger:  #F87171;
+
+  /* ── Orb gradients (read by Canvas via getComputedStyle) ── */
+  --orb-idle-1:  #7C5CFF;
+  --orb-idle-2:  #A78BFA;
+  --orb-user-1:  #06B6D4;
+  --orb-user-2:  #3B82F6;
+  --orb-agent-1: #A78BFA;
+  --orb-agent-2: #F472B6;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html {
+    background-color: var(--color-bg-base);
+    color: var(--color-text-primary);
   }
-}
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+  body {
+    font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+    background-color: var(--color-bg-base);
+    color: var(--color-text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
