@@ -150,10 +150,48 @@ function PersonaPicker({
             initial[p.id] = p.default_language;
           });
           setLangs(initial);
+          return;
         }
       } catch (e) {
         console.error('Failed to fetch personas', e);
       }
+
+      // Fallback: display static config if backend is unreachable or still deploying
+      const fallbackData: PersonaConfig[] = [
+        {
+          id: 'priya',
+          display_name: 'Priya',
+          role: 'Loan Recovery Agent',
+          avatar: '/personas/priya.png',
+          short_blurb: 'Polite reminder calls for overdue EMIs.',
+          languages: ['en-IN', 'hi-IN'],
+          default_language: 'en-IN',
+        },
+        {
+          id: 'arjun',
+          display_name: 'Arjun',
+          role: 'Insurance Renewal Agent',
+          avatar: '/personas/arjun.png',
+          short_blurb: 'Friendly reminders before your policy lapses.',
+          languages: ['en-IN', 'hi-IN', 'te-IN'],
+          default_language: 'en-IN',
+        },
+        {
+          id: 'meera',
+          display_name: 'Meera',
+          role: 'Appointment Booking Agent',
+          avatar: '/personas/meera.png',
+          short_blurb: 'Book, reschedule, or cancel appointments instantly.',
+          languages: ['en-IN', 'hi-IN', 'te-IN'],
+          default_language: 'en-IN',
+        }
+      ];
+      setPersonas(fallbackData);
+      const initial: Record<string, LanguageCode> = {};
+      fallbackData.forEach((p) => {
+        initial[p.id] = p.default_language;
+      });
+      setLangs(initial);
     };
     fetchPersonas();
   }, [setPersonas]);
