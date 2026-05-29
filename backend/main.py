@@ -32,16 +32,11 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Solnix Voice Agents", lifespan=lifespan)
 
 # CORS Middleware Setup
-origins = [
-    settings.CORS_ORIGIN,
-    "http://localhost:3000"
-]
-origins = list(set(origins))  # Remove duplicates
-
+# Allow all origins for the POC to ensure seamless connection from localhost, Vercel production, and Vercel preview domains.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
