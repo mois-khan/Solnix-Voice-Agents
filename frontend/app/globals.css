@@ -62,8 +62,4 @@
   }
 }
 
-@layer utilities {
-  .glass-panel {
-    @apply bg-bg-elevated/40 backdrop-blur-xl border border-white/5 shadow-2xl;
-  }
-}
+

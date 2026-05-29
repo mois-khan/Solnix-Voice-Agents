@@ -289,7 +289,7 @@ export default function CallOverlay({ persona, selectedLanguage, onClose }: Call
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="fixed inset-0 z-50 bg-bg-base flex flex-col"
+        className="fixed inset-0 z-50 bg-bg-base/70 backdrop-blur-2xl flex flex-col overflow-hidden"
       >
         {/* Toast Error */}
         <AnimatePresence>
@@ -307,7 +307,7 @@ export default function CallOverlay({ persona, selectedLanguage, onClose }: Call
         </AnimatePresence>
 
         {/* ─── HEADER ─── */}
-        <header className="h-16 flex items-center justify-between px-6 border-b border-border-subtle shrink-0">
+        <header className="h-16 flex items-center justify-between px-6 shrink-0 relative z-10">
           {/* Left */}
           <div className="flex items-center gap-3">
             <button
@@ -317,12 +317,6 @@ export default function CallOverlay({ persona, selectedLanguage, onClose }: Call
             >
               <ArrowLeft size={18} />
             </button>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-text-primary">{persona.display_name}</span>
-              <span className="text-[11px] uppercase tracking-wider text-text-tertiary">
-                {persona.role}
-              </span>
-            </div>
           </div>
 
           {/* Center */}
@@ -332,15 +326,6 @@ export default function CallOverlay({ persona, selectedLanguage, onClose }: Call
 
           {/* Right */}
           <div className="flex items-center gap-2">
-            {persona.languages.map((lang) => (
-              <LanguagePill
-                key={lang}
-                code={lang}
-                isActive={currentLanguage === lang}
-                isDisabled={isConnecting || isReconnecting || connectionLost}
-                onClick={() => handleLanguageSwitch(lang)}
-              />
-            ))}
             <button
               onClick={handleClose}
               className="w-8 h-8 flex items-center justify-center rounded-lg ml-2 text-text-secondary hover:text-text-primary hover:bg-bg-card transition-colors cursor-pointer"
@@ -351,102 +336,123 @@ export default function CallOverlay({ persona, selectedLanguage, onClose }: Call
           </div>
         </header>
 
-        {/* ─── CENTER — ORB + SUBTITLE ─── */}
-        <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6 relative">
+        {/* ─── SPLIT LAYOUT ─── */}
+        <div className="flex-1 flex flex-col lg:flex-row max-w-7xl w-full mx-auto px-6 overflow-hidden pb-24 relative z-0">
           
-          <div className="relative flex items-center justify-center">
-            {/* Orb Wrapper to control opacity for thinking state */}
-            <motion.div
-              animate={{ opacity: agentState === 'thinking' ? 0.6 : 1 }}
-              transition={{ duration: 0.5 }}
-            >
-              <VoiceOrb analyser={orbAnalyser} speaker={orbSpeaker} size={300} />
-            </motion.div>
+          {/* LEFT: ORB & INFO */}
+          <div className="w-full lg:w-1/2 flex flex-col items-center justify-center gap-6 lg:gap-10 relative h-1/2 lg:h-full lg:pr-12">
+            
+            {/* The Orb */}
+            <div className="relative flex items-center justify-center">
+              <motion.div
+                animate={{ opacity: agentState === 'thinking' ? 0.6 : 1 }}
+                transition={{ duration: 0.5 }}
+                className="scale-75 md:scale-90 lg:scale-100"
+              >
+                <VoiceOrb analyser={orbAnalyser} speaker={orbSpeaker} size={300} />
+              </motion.div>
 
-            {/* Reconnecting overlay */}
-            <AnimatePresence>
-              {isReconnecting && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="absolute inset-0 flex items-center justify-center bg-bg-base/50 rounded-full"
-                >
-                  <span className="text-sm font-medium text-text-primary bg-bg-elevated px-4 py-2 rounded-pill shadow-lg border border-border-subtle">
-                    Reconnecting…
-                  </span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Connecting State */}
-          {isConnecting && !initError && (
-            <div className="h-16 flex items-center justify-center">
-              <span className="text-sm text-text-secondary animate-pulse">Connecting…</span>
-            </div>
-          )}
-
-          {/* Connection Lost State */}
-          {connectionLost && (
-            <div className="h-16 flex flex-col items-center justify-center gap-2">
-              <span className="text-sm text-danger font-medium">Connection lost</span>
-              <button onClick={() => initSession()} className="text-xs px-4 py-1.5 rounded-lg bg-bg-elevated border border-border-subtle text-text-primary hover:bg-bg-card cursor-pointer">
-                Try again
-              </button>
-            </div>
-          )}
-
-          {/* Subtitle / Agent State */}
-          {!isConnecting && !connectionLost && (
-            <div className="h-16 flex flex-col items-center justify-center">
-              <AnimatePresence mode="wait">
-                {agentState === 'thinking' && showThinkingDots ? (
-                  <motion.p
-                    key="thinking"
+              <AnimatePresence>
+                {isReconnecting && (
+                  <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="text-xl font-medium text-text-tertiary"
+                    className="absolute inset-0 flex items-center justify-center bg-bg-base/50 rounded-full"
                   >
-                    …
-                  </motion.p>
-                ) : lastAgentLine && agentState !== 'thinking' ? (
-                  <motion.p
-                    key={lastAgentLine.id}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -6 }}
-                    transition={{ duration: 0.25, ease: 'easeOut' }}
-                    className={`
-                      text-2xl font-semibold text-text-primary text-center max-w-2xl leading-relaxed drop-shadow-md
-                      ${needsIndicFont(lastAgentLine.text) ? 'font-noto text-3xl tracking-wide' : 'tracking-tight'}
-                    `}
-                  >
-                    {lastAgentLine.text}
-                  </motion.p>
-                ) : null}
+                    <span className="text-sm font-medium text-text-primary bg-bg-elevated px-4 py-2 rounded-pill shadow-lg border border-border-subtle">
+                      Reconnecting…
+                    </span>
+                  </motion.div>
+                )}
               </AnimatePresence>
             </div>
-          )}
-        </div>
 
-        {/* ─── FLOATING TRANSCRIPT PANEL ─── */}
-        <div className="w-full max-w-2xl mx-auto px-6 mb-[120px] pointer-events-none z-10">
-          <div
-            className="max-h-[30vh] overflow-y-auto pointer-events-auto glass-panel rounded-2xl p-4 flex flex-col gap-1"
-            aria-live="polite"
-          >
-            {transcript.length === 0 ? (
-              <p className="text-sm text-text-tertiary text-center py-4 font-medium italic">
-                Listening...
-              </p>
-            ) : (
-              transcript.map((line) => (
-                <TranscriptLine key={line.id} line={line} />
-              ))
+            {/* Connecting State */}
+            {isConnecting && !initError && (
+              <span className="text-sm text-text-secondary animate-pulse absolute bottom-[20%]">Connecting…</span>
             )}
-            <div ref={transcriptEndRef} />
+
+            {/* Connection Lost State */}
+            {connectionLost && (
+              <div className="absolute bottom-[20%] flex flex-col items-center justify-center gap-2">
+                <span className="text-sm text-danger font-medium">Connection lost</span>
+                <button onClick={() => initSession()} className="text-xs px-4 py-1.5 rounded-lg bg-bg-elevated border border-border-subtle text-text-primary hover:bg-bg-card cursor-pointer">
+                  Try again
+                </button>
+              </div>
+            )}
+
+            {/* Info and Language Switcher */}
+            {!isConnecting && !connectionLost && (
+              <div className="flex flex-col items-center gap-3">
+                <h2 className="text-2xl font-bold text-text-primary tracking-tight">{persona.display_name}</h2>
+                <span className="text-xs uppercase tracking-widest text-accent-light font-bold drop-shadow-sm">
+                  {persona.role}
+                </span>
+                <p className="text-sm text-text-secondary text-center max-w-sm px-4 leading-relaxed">
+                  {persona.short_blurb}
+                </p>
+
+                {/* Language pills under the ball */}
+                <div className="flex items-center gap-2 mt-4">
+                  {persona.languages.map((lang) => (
+                    <LanguagePill
+                      key={lang}
+                      code={lang}
+                      isActive={currentLanguage === lang}
+                      isDisabled={isConnecting || isReconnecting || connectionLost}
+                      onClick={() => handleLanguageSwitch(lang)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* RIGHT: TRANSCRIPTION */}
+          <div className="w-full lg:w-1/2 h-1/2 lg:h-full flex flex-col relative pt-4 lg:pt-0 lg:border-l border-white/5">
+            
+            {/* Custom minimalist scrollbar styles injected */}
+            <style dangerouslySetInnerHTML={{__html: `
+              .no-scrollbar::-webkit-scrollbar { display: none; }
+              .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+              .mask-vertical { -webkit-mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent); mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent); }
+            `}} />
+
+            <div
+              className="flex-1 overflow-y-auto no-scrollbar mask-vertical pb-12 pt-8 lg:px-8 space-y-1 relative"
+              aria-live="polite"
+            >
+              {transcript.length === 0 ? (
+                <div className="h-full flex items-center justify-center">
+                  <p className="text-sm text-text-tertiary font-medium italic">
+                    Listening...
+                  </p>
+                </div>
+              ) : (
+                transcript.map((line) => (
+                  <TranscriptLine key={line.id} line={line} />
+                ))
+              )}
+
+              {/* Subtitle / Agent State for thinking */}
+              <AnimatePresence mode="wait">
+                {agentState === 'thinking' && showThinkingDots && (
+                  <motion.div
+                    key="thinking"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    className="py-4 pl-16 text-xl font-medium text-text-tertiary"
+                  >
+                    …
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div ref={transcriptEndRef} className="h-4" />
+            </div>
           </div>
         </div>
 

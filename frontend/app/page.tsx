@@ -369,7 +369,7 @@ export default function Page() {
   return (
     <>
       <Nav />
-      <main className="bg-bg-base">
+      <main>
         <Hero />
         <PersonaPicker onSelectPersona={handleSelectPersona} />
         <HowItWorks />

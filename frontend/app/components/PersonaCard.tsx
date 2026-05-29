@@ -82,7 +82,7 @@ export default function PersonaCard({
         }
         ${isSelected
           ? 'ring-2 ring-accent bg-accent-dim border-accent'
-          : 'bg-bg-elevated/40 backdrop-blur-xl border-white/5 hover:bg-bg-elevated/60 shadow-lg'
+          : 'bg-white/[0.03] backdrop-blur-xl border-white/5 hover:bg-white/[0.08] shadow-lg'
         }
       `}
       whileHover={
