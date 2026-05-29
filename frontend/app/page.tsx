@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
-import { MousePointerClick, Mic, Sparkles } from 'lucide-react';
+import { MousePointerClick, Mic, Sparkles, Menu, X } from 'lucide-react';
 
 import { PersonaConfig, LanguageCode } from '../types';
 import { useStore } from '../lib/store';
@@ -15,6 +15,7 @@ import BackgroundAurora from './components/BackgroundAurora';
 
 function Nav() {
   const [scrolled, setScrolled] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -27,13 +28,14 @@ function Nav() {
       className={`
         fixed top-0 left-0 right-0 z-40 h-16 flex items-center justify-between px-6 lg:px-12
         transition-colors duration-300
-        ${scrolled ? 'backdrop-blur-xl bg-bg-base/60 border-b border-border-subtle' : 'bg-transparent'}
+        ${scrolled || isOpen ? 'backdrop-blur-xl bg-bg-base/80 border-b border-border-subtle' : 'bg-transparent'}
       `}
     >
       <a href="#" className="text-xl font-bold text-accent tracking-tight">
         Solnix
       </a>
 
+      {/* Desktop Menu */}
       <div className="hidden md:flex items-center gap-8">
         {[
           { label: 'Personas', href: '#personas' },
@@ -57,6 +59,51 @@ function Nav() {
           GitHub
         </a>
       </div>
+
+      {/* Hamburger Toggle */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="md:hidden w-10 h-10 flex items-center justify-center rounded-xl text-text-secondary hover:text-text-primary hover:bg-white/[0.04] transition-colors cursor-pointer"
+        aria-label="Toggle Menu"
+      >
+        {isOpen ? <X size={20} /> : <Menu size={20} />}
+      </button>
+
+      {/* Mobile Slide-down Menu */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="absolute top-16 left-0 right-0 bg-bg-base/95 backdrop-blur-2xl border-b border-border-subtle flex flex-col p-6 gap-4 md:hidden z-30 shadow-2xl"
+          >
+            {[
+              { label: 'Personas', href: '#personas' },
+              { label: 'How it works', href: '#how-it-works' },
+              { label: 'Tech', href: '#tech' },
+            ].map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                onClick={() => setIsOpen(false)}
+                className="text-base font-semibold text-text-secondary hover:text-text-primary transition-colors py-2 border-b border-white/[0.03]"
+              >
+                {link.label}
+              </a>
+            ))}
+            <a
+              href="https://github.com/solnixmedia"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-base font-semibold text-text-secondary hover:text-text-primary transition-colors py-2"
+            >
+              GitHub
+            </a>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 }
@@ -64,6 +111,19 @@ function Nav() {
 /* ───────────────────────────────────────── HERO ──────────────────────────────────────── */
 
 function Hero() {
+  const [orbSize, setOrbSize] = useState(260);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) setOrbSize(400);
+      else if (window.innerWidth >= 768) setOrbSize(320);
+      else setOrbSize(260);
+    };
+    window.addEventListener('resize', handleResize);
+    handleResize();
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
     <section className="relative min-h-[90vh] flex items-center pt-16 px-6 lg:px-12 overflow-hidden">
       <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-20 relative z-10">
@@ -74,8 +134,8 @@ function Hero() {
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="flex items-center justify-center lg:w-1/2 shrink-0"
         >
-          <div className="w-[260px] h-[260px] md:w-[320px] md:h-[320px] lg:w-[400px] lg:h-[400px]">
-            <VoiceOrb analyser={null} speaker="idle" size={400} />
+          <div className="w-[260px] h-[260px] md:w-[320px] md:h-[320px] lg:w-[400px] lg:h-[400px] flex items-center justify-center">
+            <VoiceOrb analyser={null} speaker="idle" size={orbSize} />
           </div>
         </motion.div>
 

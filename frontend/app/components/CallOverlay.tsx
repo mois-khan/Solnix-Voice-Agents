@@ -342,7 +342,7 @@ export default function CallOverlay({ persona, selectedLanguage, onClose }: Call
         <div className="flex-1 flex flex-col lg:flex-row max-w-7xl w-full mx-auto px-6 overflow-hidden pb-24 relative z-0">
           
           {/* LEFT: ORB & INFO */}
-          <div className="w-full lg:w-1/2 flex flex-col items-center justify-center gap-6 lg:gap-10 relative h-1/2 lg:h-full lg:pr-12">
+          <div className="w-full lg:w-1/2 flex flex-col items-center justify-center gap-6 lg:gap-10 relative h-auto shrink-0 lg:h-full py-4 lg:py-0 lg:pr-12">
             
             {/* The Orb */}
             <div className="relative flex items-center justify-center">
@@ -413,7 +413,7 @@ export default function CallOverlay({ persona, selectedLanguage, onClose }: Call
           </div>
 
           {/* RIGHT: TRANSCRIPTION */}
-          <div className="w-full lg:w-1/2 h-1/2 lg:h-full flex flex-col relative pt-4 lg:pt-0 lg:border-l border-white/5">
+          <div className="w-full lg:w-1/2 flex-1 lg:h-full flex flex-col relative pt-4 lg:pt-0 lg:border-l border-white/5 overflow-hidden">
             
             {/* Custom minimalist scrollbar styles injected */}
             <style dangerouslySetInnerHTML={{__html: `

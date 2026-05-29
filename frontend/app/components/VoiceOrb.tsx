@@ -36,6 +36,11 @@ export default function VoiceOrb({ analyser, speaker, size }: VoiceOrbProps) {
   const rafRef = useRef<number>(0);
   const dataArrayRef = useRef<Uint8Array | null>(null);
   const reducedMotion = useReducedMotion();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setIsMobile(window.matchMedia('(max-width: 768px)').matches);
+  }, []);
 
   // Prepare the frequency data buffer when analyser changes
   useEffect(() => {
@@ -102,18 +107,20 @@ export default function VoiceOrb({ analyser, speaker, size }: VoiceOrbProps) {
     ctx.fillStyle = gradient;
     ctx.fill();
 
-    // Second pass: glow layer
-    ctx.save();
-    ctx.shadowBlur = 20 + amplitude * 60;
-    ctx.shadowColor = colors.glow;
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.fillStyle = gradient;
-    ctx.fill();
-    ctx.restore();
+    // Second pass: glow layer (skipped on mobile to fix GPU rendering lag)
+    if (!isMobile) {
+      ctx.save();
+      ctx.shadowBlur = 20 + amplitude * 60;
+      ctx.shadowColor = colors.glow;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = gradient;
+      ctx.fill();
+      ctx.restore();
+    }
 
     rafRef.current = requestAnimationFrame(draw);
-  }, [analyser, speaker, size]);
+  }, [analyser, speaker, size, isMobile]);
 
   // Start / stop rAF loop
   useEffect(() => {
