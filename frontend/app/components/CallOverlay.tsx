@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Phone, PhoneOff, MicOff, Mic, AlertCircle, X } from 'lucide-react';
+import { PhoneOff, MicOff, Mic, AlertCircle, X, Signal, BatteryFull, Wifi, Bot } from 'lucide-react';
 
 import { PersonaConfig, LanguageCode } from '../../types';
 import { useStore } from '../../lib/store';
@@ -16,12 +16,21 @@ import LanguagePill from './LanguagePill';
 import TranscriptLine from './TranscriptLine';
 import MicPermissionPrompt from './MicPermissionPrompt';
 
+/* ─────────────────────── Language label map ─────────────────────── */
+const LANG_LABELS: Record<LanguageCode, string> = {
+  'en-IN': 'English',
+  'hi-IN': 'Hindi',
+  'te-IN': 'Telugu',
+};
+
+/* ─────────────────────── Props ─────────────────────── */
 interface CallOverlayProps {
   persona: PersonaConfig;
   selectedLanguage: LanguageCode;
   onClose: () => void;
 }
 
+/* ═══════════════════════ COMPONENT ═══════════════════════ */
 export default function CallOverlay({ persona, selectedLanguage, onClose }: CallOverlayProps) {
   const {
     callState,
@@ -38,17 +47,17 @@ export default function CallOverlay({ persona, selectedLanguage, onClose }: Call
     setMuted,
   } = useStore();
 
-  const [callScreenState, setCallScreenState] = useState<'incoming' | 'active' | 'ended'>('incoming');
+  /* ── Local state ── */
+  const [callEnded, setCallEnded] = useState(false);
   const [micDenied, setMicDenied] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
-  
   const [isConnecting, setIsConnecting] = useState(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
   const [connectionLost, setConnectionLost] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-
   const [callDuration, setCallDuration] = useState(0);
 
+  /* ── Refs ── */
   const wsClientRef = useRef<VoiceWSClient | null>(null);
   const captureRef = useRef<AudioCapture | null>(null);
   const playerRef = useRef<AudioPlayer | null>(null);
@@ -56,18 +65,19 @@ export default function CallOverlay({ persona, selectedLanguage, onClose }: Call
   const audioCtxRef = useRef<AudioContext | null>(null);
   const transcriptEndRef = useRef<HTMLDivElement>(null);
   const initRef = useRef(false);
-  
   const reconnectAttemptsRef = useRef(0);
   const connectingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const sessionIdRef = useRef<string | null>(null);
   const durationTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  /* ── Auto-scroll transcript ── */
   useEffect(() => {
     transcriptEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [transcript]);
 
+  /* ── Call duration timer ── */
   useEffect(() => {
-    if (callScreenState === 'active') {
+    if (!callEnded) {
       durationTimerRef.current = setInterval(() => {
         setCallDuration((prev) => prev + 1);
       }, 1000);
@@ -75,7 +85,7 @@ export default function CallOverlay({ persona, selectedLanguage, onClose }: Call
     return () => {
       if (durationTimerRef.current) clearInterval(durationTimerRef.current);
     };
-  }, [callScreenState]);
+  }, [callEnded]);
 
   const formatDuration = (secs: number) => {
     const m = Math.floor(secs / 60);
@@ -83,6 +93,7 @@ export default function CallOverlay({ persona, selectedLanguage, onClose }: Call
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
+  /* ── WebSocket connection ── */
   const connectWs = useCallback((sessionId: string) => {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
     const wsBaseUrl = apiUrl.replace('http', 'ws');
@@ -94,7 +105,7 @@ export default function CallOverlay({ persona, selectedLanguage, onClose }: Call
       setIsReconnecting(false);
       reconnectAttemptsRef.current = 0;
       if (connectingTimerRef.current) clearTimeout(connectingTimerRef.current);
-      
+
       wsClient.sendJSON({
         type: 'session_config',
         persona: persona.id,
@@ -139,6 +150,7 @@ export default function CallOverlay({ persona, selectedLanguage, onClose }: Call
     wsClient.connect(sessionId);
   }, [persona.id, selectedLanguage, appendTranscript, setAgentState, setLanguage, connectionLost]);
 
+  /* ── Session initialisation ── */
   const initSession = useCallback(async () => {
     setInitError(null);
     setMicDenied(false);
@@ -197,20 +209,18 @@ export default function CallOverlay({ persona, selectedLanguage, onClose }: Call
     }
   }, [persona.id, selectedLanguage, clearTranscript, startCall, connectWs, onClose]);
 
-  const handleAcceptCall = () => {
-    setCallScreenState('active');
-    initSession();
-  };
+  /* ── Auto-init on mount ── */
+  useEffect(() => {
+    if (!initRef.current) {
+      initRef.current = true;
+      initSession();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const handleDeclineCall = () => {
-    setCallScreenState('ended');
-    setTimeout(() => {
-      onClose();
-    }, 1000);
-  };
-
+  /* ── End call ── */
   const handleEndCall = useCallback(() => {
-    setCallScreenState('ended');
+    setCallEnded(true);
     playerRef.current?.stop();
     sessionIdRef.current = null;
     wsClientRef.current?.disconnect();
@@ -221,6 +231,7 @@ export default function CallOverlay({ persona, selectedLanguage, onClose }: Call
     }, 1500);
   }, [endCall, onClose]);
 
+  /* ── Cleanup ── */
   useEffect(() => {
     return () => {
       sessionIdRef.current = null;
@@ -235,12 +246,14 @@ export default function CallOverlay({ persona, selectedLanguage, onClose }: Call
     };
   }, []);
 
+  /* ── Language switch ── */
   const handleLanguageSwitch = useCallback((lang: LanguageCode) => {
     if (wsClientRef.current && lang !== currentLanguage) {
       wsClientRef.current.sendJSON({ type: 'language_switch', language: lang });
     }
   }, [currentLanguage]);
 
+  /* ── PTT handlers ── */
   const handleStartSpeaking = useCallback(() => {
     if (isMuted) return;
     setIsRecording(true);
@@ -260,10 +273,11 @@ export default function CallOverlay({ persona, selectedLanguage, onClose }: Call
     }
   }, [isRecording]);
 
+  /* ── Orb analyser logic ── */
   let orbAnalyser: AnalyserNode | null = null;
   let orbSpeaker: 'idle' | 'user' | 'agent' = 'idle';
 
-  if (!isConnecting && !connectionLost && !isReconnecting && callScreenState === 'active') {
+  if (!isConnecting && !connectionLost && !isReconnecting && !callEnded) {
     if (agentState === 'speaking') {
       orbAnalyser = playerRef.current?.getOutputAnalyser() ?? null;
       orbSpeaker = 'agent';
@@ -271,37 +285,76 @@ export default function CallOverlay({ persona, selectedLanguage, onClose }: Call
       orbAnalyser = micAnalyserRef.current?.getAnalyser() ?? null;
       orbSpeaker = 'user';
     } else if (agentState === 'thinking') {
-      orbAnalyser = null; 
+      orbAnalyser = null;
       orbSpeaker = 'idle';
     }
   }
 
+  /* ── Status text ── */
+  const statusText = isConnecting
+    ? 'Connecting…'
+    : connectionLost
+    ? 'Connection Lost'
+    : isReconnecting
+    ? 'Reconnecting…'
+    : formatDuration(callDuration);
+
+  /* ═══════════════════════ RENDER ═══════════════════════ */
   return (
     <>
+      {/* ── Custom scrollbar & mask styles ── */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        .co-no-scrollbar::-webkit-scrollbar { display: none; }
+        .co-no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .co-mask-top {
+          mask-image: linear-gradient(to bottom, transparent 0%, black 15%);
+          -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%);
+        }
+        @keyframes co-thinking-dot {
+          0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+          40% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes co-pulse-ring {
+          0% { transform: scale(1); opacity: 0.4; }
+          100% { transform: scale(1.6); opacity: 0; }
+        }
+        @keyframes co-shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+      `}} />
+
+      {/* ── Mic permission modal ── */}
       <AnimatePresence>
         {micDenied && <MicPermissionPrompt onRetry={initSession} onDismiss={onClose} />}
       </AnimatePresence>
 
+      {/* ── Full-screen backdrop ── */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-8"
+        transition={{ duration: 0.35, ease: 'easeOut' }}
+        className="fixed inset-0 z-50 bg-[#0A0A0B]/90 backdrop-blur-2xl flex items-center justify-center p-4 sm:p-6 lg:p-10"
       >
+        {/* ── Floating close button ── */}
         <button
-          onClick={handleDeclineCall}
-          className="absolute top-6 right-6 w-12 h-12 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+          onClick={handleEndCall}
+          className="absolute top-5 right-5 z-[70] w-11 h-11 flex items-center justify-center rounded-full bg-white/[0.06] border border-white/[0.08] text-white/50 hover:text-white hover:bg-white/[0.12] transition-all duration-200 cursor-pointer backdrop-blur-sm"
+          aria-label="Close"
         >
-          <X size={24} />
+          <X size={18} strokeWidth={2.5} />
         </button>
 
+        {/* ── Error banner ── */}
         <AnimatePresence>
           {initError && (
             <motion.div
-              initial={{ y: -50, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute top-4 left-1/2 -translate-x-1/2 z-[60] bg-danger text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 text-sm font-medium"
+              initial={{ y: -40, opacity: 0, scale: 0.95 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ y: -20, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              className="absolute top-4 left-1/2 -translate-x-1/2 z-[60] bg-red-500/90 backdrop-blur-md text-white px-5 py-2.5 rounded-2xl shadow-2xl flex items-center gap-2.5 text-sm font-medium border border-red-400/30"
             >
               <AlertCircle size={16} />
               {initError}
@@ -309,170 +362,344 @@ export default function CallOverlay({ persona, selectedLanguage, onClose }: Call
           )}
         </AnimatePresence>
 
-        {/* The Mobile Mockup */}
+        {/* ══════════ Main layout: Phone + Transcript ══════════ */}
         <motion.div
-          initial={{ y: 50, scale: 0.95 }}
-          animate={{ y: 0, scale: 1 }}
-          exit={{ y: 50, opacity: 0, scale: 0.95 }}
-          className="relative w-full max-w-[400px] h-[800px] max-h-[90vh] bg-[#0A0A0B] rounded-[50px] shadow-2xl overflow-hidden border-[12px] border-zinc-900 flex flex-col"
-          style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(255,255,255,0.1)' }}
+          initial={{ y: 30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 30, opacity: 0 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="relative flex flex-col lg:flex-row items-center lg:items-stretch gap-6 lg:gap-8 w-full max-w-[1100px] max-h-[90vh]"
         >
-          {/* Dynamic Island / Notch Mockup */}
-          <div className="absolute top-0 inset-x-0 flex justify-center z-50">
-            <div className="w-32 h-7 bg-zinc-900 rounded-b-3xl"></div>
-          </div>
+          {/* ═══════════════════════════════════════════════════
+              LEFT — iPhone Mockup
+              ═══════════════════════════════════════════════════ */}
+          <div className="relative flex-shrink-0 w-[340px] sm:w-[360px]">
+            {/* Side buttons — Volume up/down (left edge) */}
+            <div className="absolute -left-[3px] top-[120px] w-[3px] h-[32px] rounded-l-sm bg-gradient-to-b from-zinc-600 via-zinc-500 to-zinc-600" />
+            <div className="absolute -left-[3px] top-[165px] w-[3px] h-[32px] rounded-l-sm bg-gradient-to-b from-zinc-600 via-zinc-500 to-zinc-600" />
+            {/* Side button — Power (right edge) */}
+            <div className="absolute -right-[3px] top-[150px] w-[3px] h-[48px] rounded-r-sm bg-gradient-to-b from-zinc-600 via-zinc-500 to-zinc-600" />
+            {/* Silent toggle (left, smaller) */}
+            <div className="absolute -left-[3px] top-[80px] w-[3px] h-[16px] rounded-l-sm bg-gradient-to-b from-zinc-600 via-zinc-500 to-zinc-600" />
 
-          <AnimatePresence mode="wait">
-            {callScreenState === 'incoming' && (
-              <motion.div
-                key="incoming"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex-1 flex flex-col items-center justify-between py-24 px-6 relative"
-              >
-                <div className="absolute inset-0 bg-gradient-to-b from-accent/20 to-transparent opacity-50" />
-                
-                <div className="flex flex-col items-center gap-6 relative z-10 mt-10">
-                  <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white/10 shadow-2xl relative">
-                    <img src={persona.avatar || '/personas/open.png'} alt={persona.display_name} className="w-full h-full object-cover bg-zinc-800" />
-                    <motion.div
-                      animate={{ scale: [1, 1.1, 1] }}
-                      transition={{ repeat: Infinity, duration: 2 }}
-                      className="absolute inset-0 rounded-full border-2 border-accent/50"
+            {/* Phone outer frame */}
+            <div className="relative rounded-[48px] border-[10px] border-zinc-800 bg-[#0A0A0B] overflow-hidden shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_25px_60px_-15px_rgba(0,0,0,0.8),0_0_80px_rgba(124,92,255,0.06)]">
+              {/* Metallic edge highlight */}
+              <div className="absolute inset-0 rounded-[38px] pointer-events-none z-[5] border border-white/[0.07]" />
+
+              {/* ── Dynamic Island ── */}
+              <div className="absolute top-2 inset-x-0 flex justify-center z-50">
+                <div className="w-[120px] h-[34px] bg-black rounded-full flex items-center justify-center gap-2 shadow-[0_0_0_1px_rgba(255,255,255,0.05)]">
+                  <div className="w-[10px] h-[10px] rounded-full bg-zinc-900 ring-1 ring-zinc-700/50" />
+                  <div className="w-[10px] h-[10px] rounded-full bg-zinc-900 ring-1 ring-zinc-700/50" />
+                </div>
+              </div>
+
+              {/* ── Phone screen ── */}
+              <div className="relative flex flex-col h-[680px] sm:h-[720px] overflow-hidden">
+                {/* Subtle radial gradient on screen */}
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(124,92,255,0.05)_0%,transparent_70%)] pointer-events-none" />
+                {/* Inner screen shadow for depth */}
+                <div className="absolute inset-0 shadow-[inset_0_2px_10px_rgba(0,0,0,0.4)] pointer-events-none z-[4] rounded-[38px]" />
+
+                {/* ─── Status Bar ─── */}
+                <div className="relative z-10 pt-14 pb-3 px-6 flex flex-col items-center gap-1">
+                  {/* Fake status bar icons */}
+                  <div className="absolute top-2 left-0 right-0 px-8 flex items-center justify-between text-white/30">
+                    <span className="text-[11px] font-medium">
+                      {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <Signal size={11} />
+                      <Wifi size={11} />
+                      <BatteryFull size={13} />
+                    </div>
+                  </div>
+
+                  {/* Persona name */}
+                  <h2 className="text-lg font-semibold text-white tracking-tight">
+                    {persona.display_name}
+                  </h2>
+
+                  {/* Call status / timer */}
+                  <div className="flex items-center gap-2">
+                    {!callEnded && !connectionLost && !isConnecting && (
+                      <span className="relative flex h-2 w-2">
+                        <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-75" />
+                        <span className="relative rounded-full h-2 w-2 bg-emerald-400" />
+                      </span>
+                    )}
+                    <span className="text-sm text-white/50 font-mono tracking-wider">
+                      {statusText}
+                    </span>
+                  </div>
+                </div>
+
+                {/* ─── Language Pills ─── */}
+                <div className="relative z-10 flex items-center justify-center gap-2 px-4 pb-3">
+                  {persona.languages.map((lang) => (
+                    <LanguagePill
+                      key={lang}
+                      code={lang}
+                      isActive={currentLanguage === lang}
+                      isDisabled={isConnecting || isReconnecting || connectionLost}
+                      onClick={() => handleLanguageSwitch(lang)}
                     />
-                  </div>
-                  <div className="text-center">
-                    <h2 className="text-3xl font-bold text-white tracking-tight">{persona.display_name}</h2>
-                    <p className="text-lg text-white/60 mt-2">Incoming Voice Call...</p>
-                  </div>
+                  ))}
                 </div>
 
-                <div className="flex justify-between w-full px-8 relative z-10 mb-10">
-                  <div className="flex flex-col items-center gap-2">
-                    <button onClick={handleDeclineCall} className="w-16 h-16 rounded-full bg-danger text-white flex items-center justify-center hover:scale-105 active:scale-95 transition-transform shadow-[0_0_20px_rgba(239,68,68,0.4)] cursor-pointer">
-                      <PhoneOff size={28} />
-                    </button>
-                    <span className="text-sm font-medium text-white/80">Decline</span>
-                  </div>
-                  <div className="flex flex-col items-center gap-2">
-                    <button onClick={handleAcceptCall} className="w-16 h-16 rounded-full bg-success text-white flex items-center justify-center hover:scale-105 active:scale-95 transition-transform shadow-[0_0_20px_rgba(34,197,94,0.4)] cursor-pointer">
-                      <motion.div animate={{ rotate: [0, 15, -15, 0] }} transition={{ repeat: Infinity, duration: 1.5, repeatDelay: 1 }}>
-                        <Phone size={28} />
-                      </motion.div>
-                    </button>
-                    <span className="text-sm font-medium text-white/80">Accept</span>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {callScreenState === 'active' && (
-              <motion.div
-                key="active"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex-1 flex flex-col relative h-full"
-              >
-                {/* Header info */}
-                <div className="pt-16 pb-4 flex flex-col items-center gap-1 z-10 shrink-0">
-                  <h2 className="text-xl font-semibold text-white tracking-tight">{persona.display_name}</h2>
-                  <div className="text-sm text-white/60 font-mono">
-                    {isConnecting ? 'Connecting...' : connectionLost ? 'Connection Lost' : formatDuration(callDuration)}
-                  </div>
-                  
-                  {/* Language Pills */}
-                  <div className="flex items-center gap-2 mt-3">
-                    {persona.languages.map((lang) => (
-                      <LanguagePill
-                        key={lang}
-                        code={lang}
-                        isActive={currentLanguage === lang}
-                        isDisabled={isConnecting || isReconnecting || connectionLost}
-                        onClick={() => handleLanguageSwitch(lang)}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Orb */}
-                <div className="flex-1 flex flex-col items-center justify-center min-h-[240px] z-10 relative">
-                  <motion.div animate={{ opacity: agentState === 'thinking' ? 0.6 : 1 }} transition={{ duration: 0.5 }}>
-                    <VoiceOrb analyser={orbAnalyser} speaker={orbSpeaker} size={220} />
+                {/* ─── VoiceOrb (centered) ─── */}
+                <div className="relative z-10 flex-1 flex flex-col items-center justify-center min-h-0">
+                  <motion.div
+                    animate={{ opacity: agentState === 'thinking' ? 0.6 : 1 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <VoiceOrb analyser={orbAnalyser} speaker={orbSpeaker} size={180} />
                   </motion.div>
+
+                  {/* Agent state label */}
+                  <motion.p
+                    key={agentState}
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-4 text-xs uppercase tracking-[0.2em] font-medium text-white/30"
+                  >
+                    {isConnecting ? 'Initializing' : agentState === 'listening' ? 'Listening' : agentState === 'thinking' ? 'Thinking' : agentState === 'speaking' ? 'Speaking' : 'Ready'}
+                  </motion.p>
+
+                  {/* Reconnecting badge */}
                   {isReconnecting && (
-                    <div className="absolute bottom-4 bg-bg-elevated px-4 py-2 rounded-pill shadow-lg border border-border-subtle text-sm text-white">
+                    <div className="absolute bottom-6 bg-white/[0.06] backdrop-blur-md px-4 py-2 rounded-full shadow-lg border border-white/[0.08] text-xs text-white/70 font-medium">
                       Reconnecting…
                     </div>
                   )}
                 </div>
 
-                {/* Transcript Overlay */}
-                <div className="h-[200px] w-full px-6 relative z-10 flex flex-col justify-end">
-                  <style dangerouslySetInnerHTML={{__html: `
-                    .no-scrollbar::-webkit-scrollbar { display: none; }
-                    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-                    .mask-vertical-bottom { mask-image: linear-gradient(to top, black 50%, transparent 100%); -webkit-mask-image: linear-gradient(to top, black 50%, transparent 100%); }
-                  `}} />
-                  <div className="flex-1 overflow-y-auto no-scrollbar mask-vertical-bottom pb-4 space-y-2 flex flex-col justify-end">
-                    {transcript.map((line) => (
-                      <TranscriptLine key={line.id} line={line} />
-                    ))}
-                    {agentState === 'thinking' && (
-                      <div className="py-2 pl-2 text-xl font-medium text-white/50 animate-pulse">…</div>
-                    )}
-                    <div ref={transcriptEndRef} className="h-2" />
-                  </div>
-                </div>
-
-                {/* Call Controls */}
-                <div className="pb-12 pt-4 px-8 flex justify-between items-center bg-gradient-to-t from-black via-black/80 to-transparent z-20 shrink-0">
+                {/* ─── Call Controls ─── */}
+                <div className="relative z-20 pb-8 pt-4 px-6 flex items-center justify-between bg-gradient-to-t from-[#0A0A0B] via-[#0A0A0B]/90 to-transparent">
+                  {/* Mute */}
                   <button
                     onClick={() => setMuted(!isMuted)}
-                    className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
-                      isMuted ? 'bg-white text-black' : 'bg-white/10 text-white hover:bg-white/20'
+                    className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer ${
+                      isMuted
+                        ? 'bg-white text-[#0A0A0B] shadow-[0_0_20px_rgba(255,255,255,0.15)]'
+                        : 'bg-white/[0.08] text-white/80 hover:bg-white/[0.14] border border-white/[0.06]'
                     }`}
+                    aria-label={isMuted ? 'Unmute' : 'Mute'}
                   >
-                    {isMuted ? <MicOff size={24} /> : <Mic size={24} />}
+                    {isMuted ? <MicOff size={22} /> : <Mic size={22} />}
                   </button>
 
-                  <button
-                    onMouseDown={handleStartSpeaking}
-                    onMouseUp={handleStopSpeaking}
-                    onTouchStart={handleStartSpeaking}
-                    onTouchEnd={handleStopSpeaking}
-                    className={`w-20 h-20 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-                      isMuted ? 'opacity-50 cursor-not-allowed bg-white/10 text-white/50' : 
-                      isRecording ? 'bg-accent text-white scale-110 shadow-[0_0_30px_rgba(124,92,255,0.6)]' : 
-                      'bg-white/10 text-white border border-white/20 hover:bg-white/20'
-                    }`}
-                  >
-                    <Mic size={32} />
-                  </button>
+                  {/* Push-to-talk */}
+                  <div className="relative">
+                    {/* Pulse ring when recording */}
+                    {isRecording && (
+                      <div className="absolute inset-0 -m-2">
+                        <div className="absolute inset-0 rounded-full border-2 border-[#7C5CFF]/40" style={{ animation: 'co-pulse-ring 1.5s ease-out infinite' }} />
+                      </div>
+                    )}
+                    <button
+                      onMouseDown={handleStartSpeaking}
+                      onMouseUp={handleStopSpeaking}
+                      onTouchStart={handleStartSpeaking}
+                      onTouchEnd={handleStopSpeaking}
+                      disabled={isMuted}
+                      className={`relative w-[72px] h-[72px] rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer ${
+                        isMuted
+                          ? 'opacity-30 cursor-not-allowed bg-white/[0.06] text-white/40'
+                          : isRecording
+                          ? 'bg-[#7C5CFF] text-white scale-105 shadow-[0_0_40px_rgba(124,92,255,0.5)]'
+                          : 'bg-white/[0.08] text-white border-2 border-white/[0.12] hover:bg-white/[0.14] hover:border-white/[0.2] active:scale-95'
+                      }`}
+                      aria-label="Push to talk"
+                    >
+                      <Mic size={30} />
+                    </button>
+                  </div>
 
+                  {/* End call */}
                   <button
                     onClick={handleEndCall}
-                    className="w-14 h-14 rounded-full bg-danger text-white flex items-center justify-center hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+                    className="w-14 h-14 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-400 active:scale-95 transition-all duration-200 cursor-pointer shadow-[0_0_24px_rgba(239,68,68,0.3)]"
+                    aria-label="End call"
                   >
-                    <PhoneOff size={24} />
+                    <PhoneOff size={22} />
                   </button>
                 </div>
-              </motion.div>
-            )}
+              </div>
+            </div>
+          </div>
 
-            {callScreenState === 'ended' && (
+          {/* ═══════════════════════════════════════════════════
+              RIGHT — Glassmorphic Transcript Panel
+              ═══════════════════════════════════════════════════ */}
+          <div className="flex-1 min-w-0 w-full lg:w-auto max-h-[50vh] lg:max-h-none flex flex-col rounded-3xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] overflow-hidden shadow-[0_0_60px_rgba(124,92,255,0.04),0_0_0_1px_rgba(255,255,255,0.03)]">
+            {/* ── Panel header ── */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-white/[0.06] shrink-0">
+              <div className="flex items-center gap-3">
+                {/* Persona avatar */}
+                <div className="relative w-10 h-10 rounded-full overflow-hidden ring-2 ring-white/[0.08] shrink-0 bg-gradient-to-br from-accent/30 to-accent/10 flex items-center justify-center">
+                  {persona.id === 'open' ? (
+                    <Bot size={20} className="text-accent" />
+                  ) : (
+                    <img
+                      src={persona.avatar}
+                      alt={persona.display_name}
+                      className="w-full h-full object-cover bg-zinc-800"
+                    />
+                  )}
+                  {/* Online indicator */}
+                  <div className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#0A0A0B]" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-white leading-tight">
+                    {persona.display_name}
+                  </h3>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-[11px] text-white/40 bg-white/[0.06] px-2 py-0.5 rounded-full font-medium">
+                      {persona.role}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Language indicator */}
+              <div className="flex items-center gap-2 text-xs text-white/30 font-medium">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#7C5CFF]" />
+                {LANG_LABELS[currentLanguage]}
+              </div>
+            </div>
+
+            {/* ── Scrollable transcript area ── */}
+            <div className="relative flex-1 min-h-0">
+              {/* Top fade mask */}
+              <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-[#0A0A0B]/80 to-transparent z-10 pointer-events-none" />
+
+              <div className="h-full overflow-y-auto co-no-scrollbar co-mask-top px-4 py-4 flex flex-col gap-1.5">
+                {/* Empty state */}
+                {transcript.length === 0 && !callEnded && (
+                  <div className="flex-1 flex flex-col items-center justify-center gap-3 py-16">
+                    <div className="w-12 h-12 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
+                      <Mic size={20} className="text-white/20" />
+                    </div>
+                    <p className="text-sm text-white/20 text-center max-w-[200px]">
+                      {isConnecting ? 'Connecting to agent…' : 'Hold the mic button to speak'}
+                    </p>
+                  </div>
+                )}
+
+                {/* Transcript messages */}
+                {transcript.map((line) => {
+                  const isAgent = line.speaker === 'agent';
+                  return (
+                    <motion.div
+                      key={line.id}
+                      initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{ duration: 0.25, ease: 'easeOut' }}
+                      className={`flex ${isAgent ? 'justify-start' : 'justify-end'}`}
+                    >
+                      <div
+                        className={`max-w-[85%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                          isAgent
+                            ? 'bg-[#7C5CFF]/[0.1] border border-[#7C5CFF]/[0.12] text-white/90 rounded-bl-md'
+                            : 'bg-white/[0.08] border border-white/[0.06] text-white/80 rounded-br-md'
+                        } ${/[\u0900-\u097F\u0C00-\u0C7F]/.test(line.text) ? 'font-noto' : ''}`}
+                      >
+                        {/* Speaker label */}
+                        <span className={`block text-[10px] uppercase tracking-[0.15em] font-semibold mb-1 ${
+                          isAgent ? 'text-[#7C5CFF]/70' : 'text-white/30'
+                        }`}>
+                          {isAgent ? persona.display_name : 'You'}
+                        </span>
+                        {line.text}
+                      </div>
+                    </motion.div>
+                  );
+                })}
+
+                {/* Thinking indicator */}
+                {agentState === 'thinking' && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex justify-start"
+                  >
+                    <div className="flex items-center gap-1.5 bg-[#7C5CFF]/[0.08] border border-[#7C5CFF]/[0.1] px-5 py-3 rounded-2xl rounded-bl-md">
+                      {[0, 1, 2].map((i) => (
+                        <span
+                          key={i}
+                          className="block w-2 h-2 rounded-full bg-[#7C5CFF]/60"
+                          style={{
+                            animation: `co-thinking-dot 1.4s ease-in-out ${i * 0.2}s infinite`,
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+
+                <div ref={transcriptEndRef} className="h-2 shrink-0" />
+              </div>
+            </div>
+
+            {/* ── Panel footer — recording indicator ── */}
+            <div className="shrink-0 border-t border-white/[0.06] px-6 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs text-white/25">
+                {isRecording ? (
+                  <>
+                    <span className="relative flex h-2 w-2">
+                      <span className="absolute inset-0 rounded-full bg-red-400 animate-ping opacity-75" />
+                      <span className="relative rounded-full h-2 w-2 bg-red-400" />
+                    </span>
+                    <span className="text-red-300/70 font-medium">Recording…</span>
+                  </>
+                ) : (
+                  <span className="text-white/20">
+                    {transcript.length > 0 ? `${transcript.length} messages` : 'No messages yet'}
+                  </span>
+                )}
+              </div>
+              <span className="text-[11px] text-white/15 font-mono">{formatDuration(callDuration)}</span>
+            </div>
+          </div>
+
+          {/* ═══════════════════════════════════════════════════
+              CALL ENDED OVERLAY
+              ═══════════════════════════════════════════════════ */}
+          <AnimatePresence>
+            {callEnded && (
               <motion.div
-                key="ended"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="flex-1 flex flex-col items-center justify-center"
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="absolute inset-0 z-50 rounded-3xl bg-[#0A0A0B]/85 backdrop-blur-2xl flex flex-col items-center justify-center gap-4"
               >
-                <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-4">
-                  <PhoneOff size={32} className="text-white/40" />
-                </div>
-                <h2 className="text-2xl font-bold text-white">Call Ended</h2>
-                <p className="text-white/60 mt-2">{formatDuration(callDuration)}</p>
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.1, type: 'spring', stiffness: 300, damping: 25 }}
+                  className="w-20 h-20 rounded-full bg-white/[0.04] border border-white/[0.08] flex items-center justify-center"
+                >
+                  <PhoneOff size={32} className="text-white/30" />
+                </motion.div>
+                <motion.h2
+                  initial={{ y: 10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="text-2xl font-bold text-white tracking-tight"
+                >
+                  Call Ended
+                </motion.h2>
+                <motion.p
+                  initial={{ y: 10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="text-white/40 text-sm font-mono tracking-wider"
+                >
+                  Duration: {formatDuration(callDuration)}
+                </motion.p>
               </motion.div>
             )}
           </AnimatePresence>
