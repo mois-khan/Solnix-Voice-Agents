@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
-import { MousePointerClick, Mic, Sparkles, Menu, X } from 'lucide-react';
+import { MousePointerClick, Mic, Sparkles, Menu, X, Bot, Languages } from 'lucide-react';
 
 import { PersonaConfig, LanguageCode } from '../types';
 import { useStore } from '../lib/store';
@@ -341,8 +341,12 @@ function PersonaPicker({
             >
               <div className="absolute inset-0 bg-gradient-to-r from-accent/30 via-accent-light/10 to-accent/30 rounded-3xl blur-2xl opacity-50 group-hover:opacity-100 transition-opacity duration-700" />
               <div className="relative rounded-3xl border-2 border-accent/30 bg-bg-card/80 backdrop-blur-xl p-8 overflow-hidden flex flex-col md:flex-row items-center gap-8 shadow-2xl">
-                <div className="w-32 h-32 shrink-0 rounded-full overflow-hidden border-4 border-white/10 relative z-10 shadow-lg">
-                  <img src={p.avatar} alt={p.display_name} className="w-full h-full object-cover" />
+                <div className="w-32 h-32 shrink-0 rounded-full overflow-hidden border-4 border-white/10 relative z-10 shadow-lg bg-gradient-to-br from-bg-elevated to-bg-base flex items-center justify-center">
+                  {p.id === 'open' ? (
+                    <Bot className="w-16 h-16 text-accent drop-shadow-md" />
+                  ) : (
+                    <img src={p.avatar} alt={p.display_name} className="w-full h-full object-cover bg-zinc-900 text-transparent" />
+                  )}
                 </div>
                 
                 <div className="flex-1 text-center md:text-left relative z-10">
@@ -355,13 +359,14 @@ function PersonaPicker({
                         <button
                           key={lang}
                           onClick={() => setLangs((prev) => ({ ...prev, [p.id]: lang }))}
-                          className={`px-3 py-1.5 text-xs font-semibold rounded-pill border transition-all ${
+                          className={`flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-pill border transition-all ${
                             (langs[p.id] || p.default_language) === lang
                               ? 'bg-accent text-white border-accent'
                               : 'bg-white/5 border-white/10 text-text-secondary hover:bg-white/10'
                           }`}
                         >
-                          {lang === 'en-IN' ? 'EN' : lang === 'hi-IN' ? 'हि' : 'తె'}
+                          <Languages size={14} className="opacity-80" />
+                          {lang === 'en-IN' ? 'English' : lang === 'hi-IN' ? 'Hindi' : 'Telugu'}
                         </button>
                       ))}
                     </div>

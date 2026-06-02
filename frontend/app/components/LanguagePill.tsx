@@ -4,10 +4,12 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { LanguageCode } from '../../types';
 
+import { Languages } from 'lucide-react';
+
 const LABELS: Record<LanguageCode, string> = {
-  'en-IN': 'EN',
-  'hi-IN': 'हि',
-  'te-IN': 'తె',
+  'en-IN': 'English',
+  'hi-IN': 'Hindi',
+  'te-IN': 'Telugu',
 };
 
 const ARIA_LABELS: Record<LanguageCode, string> = {
@@ -44,7 +46,10 @@ export default function LanguagePill({ code, isActive, isDisabled, onClick }: La
       transition={{ duration: 0.15, ease: 'easeOut' }}
       whileTap={!isDisabled ? { scale: 0.95 } : undefined}
     >
-      {LABELS[code]}
+      <div className="flex items-center gap-1.5">
+        <Languages size={14} className="opacity-80" />
+        {LABELS[code]}
+      </div>
     </motion.button>
   );
 }
