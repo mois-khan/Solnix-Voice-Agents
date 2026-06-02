@@ -373,39 +373,39 @@ export default function CallOverlay({ persona, selectedLanguage, onClose }: Call
           {/* ═══════════════════════════════════════════════════
               LEFT — iPhone Mockup
               ═══════════════════════════════════════════════════ */}
-          <div className="relative flex-shrink-0 w-[340px] sm:w-[360px]">
+          <div className="relative flex-shrink-0 w-[280px] sm:w-[300px]">
             {/* Side buttons — Volume up/down (left edge) */}
-            <div className="absolute -left-[3px] top-[120px] w-[3px] h-[32px] rounded-l-sm bg-gradient-to-b from-zinc-600 via-zinc-500 to-zinc-600" />
-            <div className="absolute -left-[3px] top-[165px] w-[3px] h-[32px] rounded-l-sm bg-gradient-to-b from-zinc-600 via-zinc-500 to-zinc-600" />
+            <div className="absolute -left-[3px] top-[100px] w-[3px] h-[28px] rounded-l-sm bg-gradient-to-b from-zinc-600 via-zinc-500 to-zinc-600" />
+            <div className="absolute -left-[3px] top-[138px] w-[3px] h-[28px] rounded-l-sm bg-gradient-to-b from-zinc-600 via-zinc-500 to-zinc-600" />
             {/* Side button — Power (right edge) */}
-            <div className="absolute -right-[3px] top-[150px] w-[3px] h-[48px] rounded-r-sm bg-gradient-to-b from-zinc-600 via-zinc-500 to-zinc-600" />
+            <div className="absolute -right-[3px] top-[125px] w-[3px] h-[40px] rounded-r-sm bg-gradient-to-b from-zinc-600 via-zinc-500 to-zinc-600" />
             {/* Silent toggle (left, smaller) */}
-            <div className="absolute -left-[3px] top-[80px] w-[3px] h-[16px] rounded-l-sm bg-gradient-to-b from-zinc-600 via-zinc-500 to-zinc-600" />
+            <div className="absolute -left-[3px] top-[70px] w-[3px] h-[14px] rounded-l-sm bg-gradient-to-b from-zinc-600 via-zinc-500 to-zinc-600" />
 
             {/* Phone outer frame */}
-            <div className="relative rounded-[48px] border-[10px] border-zinc-800 bg-[#0A0A0B] overflow-hidden shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_25px_60px_-15px_rgba(0,0,0,0.8),0_0_80px_rgba(124,92,255,0.06)]">
+            <div className="relative rounded-[44px] border-[8px] border-zinc-800 bg-[#0A0A0B] overflow-hidden shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_25px_60px_-15px_rgba(0,0,0,0.8),0_0_80px_rgba(124,92,255,0.06)]">
               {/* Metallic edge highlight */}
-              <div className="absolute inset-0 rounded-[38px] pointer-events-none z-[5] border border-white/[0.07]" />
+              <div className="absolute inset-0 rounded-[36px] pointer-events-none z-[5] border border-white/[0.07]" />
 
               {/* ── Dynamic Island ── */}
-              <div className="absolute top-2 inset-x-0 flex justify-center z-50">
-                <div className="w-[120px] h-[34px] bg-black rounded-full flex items-center justify-center gap-2 shadow-[0_0_0_1px_rgba(255,255,255,0.05)]">
-                  <div className="w-[10px] h-[10px] rounded-full bg-zinc-900 ring-1 ring-zinc-700/50" />
-                  <div className="w-[10px] h-[10px] rounded-full bg-zinc-900 ring-1 ring-zinc-700/50" />
+              <div className="absolute top-1.5 inset-x-0 flex justify-center z-50">
+                <div className="w-[100px] h-[28px] bg-black rounded-full flex items-center justify-center gap-2 shadow-[0_0_0_1px_rgba(255,255,255,0.05)]">
+                  <div className="w-[8px] h-[8px] rounded-full bg-zinc-900 ring-1 ring-zinc-700/50" />
+                  <div className="w-[8px] h-[8px] rounded-full bg-zinc-900 ring-1 ring-zinc-700/50" />
                 </div>
               </div>
 
               {/* ── Phone screen ── */}
-              <div className="relative flex flex-col h-[680px] sm:h-[720px] overflow-hidden">
+              <div className="relative flex flex-col h-[560px] sm:h-[580px] overflow-hidden">
                 {/* Subtle radial gradient on screen */}
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(124,92,255,0.05)_0%,transparent_70%)] pointer-events-none" />
                 {/* Inner screen shadow for depth */}
-                <div className="absolute inset-0 shadow-[inset_0_2px_10px_rgba(0,0,0,0.4)] pointer-events-none z-[4] rounded-[38px]" />
+                <div className="absolute inset-0 shadow-[inset_0_2px_10px_rgba(0,0,0,0.4)] pointer-events-none z-[4] rounded-[36px]" />
 
                 {/* ─── Status Bar ─── */}
-                <div className="relative z-10 pt-14 pb-3 px-6 flex flex-col items-center gap-1">
+                <div className="relative z-10 pt-12 pb-2 px-5 flex flex-col items-center gap-0.5">
                   {/* Fake status bar icons */}
-                  <div className="absolute top-2 left-0 right-0 px-8 flex items-center justify-between text-white/30">
+                  <div className="absolute top-1.5 left-0 right-0 px-6 flex items-center justify-between text-white/30">
                     <span className="text-[11px] font-medium">
                       {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
@@ -417,7 +417,7 @@ export default function CallOverlay({ persona, selectedLanguage, onClose }: Call
                   </div>
 
                   {/* Persona name */}
-                  <h2 className="text-lg font-semibold text-white tracking-tight">
+                  <h2 className="text-base font-semibold text-white tracking-tight">
                     {persona.display_name}
                   </h2>
 
@@ -436,7 +436,7 @@ export default function CallOverlay({ persona, selectedLanguage, onClose }: Call
                 </div>
 
                 {/* ─── Language Pills ─── */}
-                <div className="relative z-10 flex items-center justify-center gap-2 px-4 pb-3">
+                <div className="relative z-10 flex items-center justify-center gap-1.5 px-3 pb-2">
                   {persona.languages.map((lang) => (
                     <LanguagePill
                       key={lang}
@@ -454,7 +454,7 @@ export default function CallOverlay({ persona, selectedLanguage, onClose }: Call
                     animate={{ opacity: agentState === 'thinking' ? 0.6 : 1 }}
                     transition={{ duration: 0.5 }}
                   >
-                    <VoiceOrb analyser={orbAnalyser} speaker={orbSpeaker} size={180} />
+                    <VoiceOrb analyser={orbAnalyser} speaker={orbSpeaker} size={150} />
                   </motion.div>
 
                   {/* Agent state label */}
@@ -476,11 +476,11 @@ export default function CallOverlay({ persona, selectedLanguage, onClose }: Call
                 </div>
 
                 {/* ─── Call Controls ─── */}
-                <div className="relative z-20 pb-8 pt-4 px-6 flex items-center justify-between bg-gradient-to-t from-[#0A0A0B] via-[#0A0A0B]/90 to-transparent">
+                <div className="relative z-20 pb-6 pt-3 px-5 flex items-center justify-between bg-gradient-to-t from-[#0A0A0B] via-[#0A0A0B]/90 to-transparent">
                   {/* Mute */}
                   <button
                     onClick={() => setMuted(!isMuted)}
-                    className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer ${
+                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer ${
                       isMuted
                         ? 'bg-white text-[#0A0A0B] shadow-[0_0_20px_rgba(255,255,255,0.15)]'
                         : 'bg-white/[0.08] text-white/80 hover:bg-white/[0.14] border border-white/[0.06]'
@@ -504,7 +504,7 @@ export default function CallOverlay({ persona, selectedLanguage, onClose }: Call
                       onTouchStart={handleStartSpeaking}
                       onTouchEnd={handleStopSpeaking}
                       disabled={isMuted}
-                      className={`relative w-[72px] h-[72px] rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer ${
+                      className={`relative w-[60px] h-[60px] rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer ${
                         isMuted
                           ? 'opacity-30 cursor-not-allowed bg-white/[0.06] text-white/40'
                           : isRecording
@@ -513,14 +513,14 @@ export default function CallOverlay({ persona, selectedLanguage, onClose }: Call
                       }`}
                       aria-label="Push to talk"
                     >
-                      <Mic size={30} />
+                      <Mic size={26} />
                     </button>
                   </div>
 
                   {/* End call */}
                   <button
                     onClick={handleEndCall}
-                    className="w-14 h-14 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-400 active:scale-95 transition-all duration-200 cursor-pointer shadow-[0_0_24px_rgba(239,68,68,0.3)]"
+                    className="w-12 h-12 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-400 active:scale-95 transition-all duration-200 cursor-pointer shadow-[0_0_24px_rgba(239,68,68,0.3)]"
                     aria-label="End call"
                   >
                     <PhoneOff size={22} />

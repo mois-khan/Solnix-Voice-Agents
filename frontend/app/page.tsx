@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { MousePointerClick, Mic, Sparkles, Menu, X, Bot, Languages, Phone, ArrowRight } from 'lucide-react';
 
@@ -353,96 +353,101 @@ function ScenarioAgents({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.35, ease: 'easeOut' }}
-              className="flex flex-col items-center"
             >
-              {/* Stats pill */}
-              <div className="inline-flex items-center gap-2 px-5 py-2 mb-10 rounded-pill bg-accent/10 border border-accent/20 backdrop-blur-md">
-                <Sparkles size={14} className="text-accent" />
-                <span className="text-sm font-medium text-accent">{activePersona.short_blurb}</span>
+              {/* Glass showcase card */}
+              <div className="relative max-w-3xl mx-auto rounded-3xl overflow-hidden">
+                {/* Ambient glow */}
+                <div className="absolute inset-0 bg-gradient-to-br from-accent/15 via-transparent to-accent/10 blur-3xl opacity-60" />
+
+                {/* Card body */}
+                <div className="relative rounded-3xl border border-white/[0.08] bg-white/[0.02] backdrop-blur-2xl overflow-hidden">
+                  {/* Top gradient accent line */}
+                  <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-accent to-transparent" />
+
+                  <div className="p-8 md:p-10 flex flex-col md:flex-row items-center gap-8">
+                    {/* Left: Agent info */}
+                    <div className="flex-1 text-center md:text-left">
+                      {/* Avatar + Name */}
+                      <div className="flex flex-col md:flex-row items-center md:items-start gap-4 mb-4">
+                        <div className="w-16 h-16 rounded-2xl bg-accent/20 border border-accent/30 flex items-center justify-center text-2xl font-bold text-white shrink-0">
+                          {activePersona.display_name.charAt(0)}
+                        </div>
+                        <div>
+                          <h3 className="text-2xl font-bold text-text-primary">{activePersona.display_name}</h3>
+                          <span className="text-[11px] font-bold uppercase tracking-widest text-accent-light">
+                            {activePersona.role}
+                          </span>
+                        </div>
+                      </div>
+
+                      <p className="text-text-secondary text-sm leading-relaxed mb-6 max-w-sm">
+                        {activePersona.short_blurb}
+                      </p>
+
+                      {/* Language selection */}
+                      <div className="flex flex-wrap gap-2 mb-6 justify-center md:justify-start">
+                        {activePersona.languages.map((lang) => (
+                          <button
+                            key={lang}
+                            onClick={() => setLangs((prev) => ({ ...prev, [activePersona.id]: lang }))}
+                            className={`flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl border transition-all cursor-pointer ${
+                              selectedLang === lang
+                                ? 'bg-accent text-white border-accent shadow-md shadow-accent/20'
+                                : 'bg-white/[0.03] border-white/10 text-text-secondary hover:bg-white/[0.06] hover:border-white/20'
+                            }`}
+                          >
+                            <Languages size={14} className="opacity-70" />
+                            {LANG_LABEL[lang]}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* CTA button */}
+                      <button
+                        onClick={() => {
+                          if (callState !== 'active' && activePersona) {
+                            onSelectPersona(activePersona, selectedLang);
+                          }
+                        }}
+                        disabled={callState === 'active'}
+                        className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-xl bg-accent text-white font-bold text-sm shadow-lg shadow-accent/25 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        <Phone size={18} />
+                        Talk to {activePersona.display_name}
+                        <ArrowRight size={16} className="opacity-60" />
+                      </button>
+                    </div>
+
+                    {/* Right: Orb call button */}
+                    <div className="relative shrink-0">
+                      <button
+                        onClick={() => {
+                          if (callState !== 'active' && activePersona) {
+                            onSelectPersona(activePersona, selectedLang);
+                          }
+                        }}
+                        disabled={callState === 'active'}
+                        className="relative group cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        {/* Animated glow rings */}
+                        <motion.div
+                          animate={{ scale: [1, 1.08, 1], opacity: [0.15, 0.35, 0.15] }}
+                          transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
+                          className="absolute inset-[-20px] rounded-full bg-accent/20 blur-2xl"
+                        />
+                        <div className="absolute inset-[-16px] rounded-full border border-accent/10" />
+                        <div className="absolute inset-[-8px] rounded-full border border-accent/[0.06]" />
+
+                        {/* The orb */}
+                        <div className="relative w-[160px] h-[160px] rounded-full bg-gradient-to-br from-accent/25 to-accent/5 border-2 border-accent/30 flex items-center justify-center group-hover:scale-105 group-active:scale-95 transition-transform">
+                          <div className="absolute inset-0 rounded-full bg-accent/15 blur-lg group-hover:bg-accent/25 transition-colors" />
+                          <Phone size={44} className="text-white relative z-10 drop-shadow-lg" />
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
-
-              {/* Central Orb Area */}
-              <div className="relative w-[300px] h-[300px] flex items-center justify-center mb-10">
-                {/* Outer glow rings */}
-                <div className="absolute inset-0 rounded-full border border-accent/10" />
-                <div className="absolute inset-4 rounded-full border border-accent/5" />
-                <motion.div
-                  animate={{ scale: [1, 1.05, 1], opacity: [0.3, 0.6, 0.3] }}
-                  transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
-                  className="absolute inset-0 rounded-full bg-accent/5 blur-xl"
-                />
-
-                {/* The clickable orb */}
-                <button
-                  onClick={() => {
-                    if (callState !== 'active' && activePersona) {
-                      onSelectPersona(activePersona, selectedLang);
-                    }
-                  }}
-                  disabled={callState === 'active'}
-                  className="relative w-[140px] h-[140px] rounded-full bg-gradient-to-br from-accent/30 to-accent/10 border-2 border-accent/30 flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95 transition-transform group disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <div className="absolute inset-0 rounded-full bg-accent/20 blur-md group-hover:bg-accent/30 transition-colors" />
-                  <Phone size={40} className="text-white relative z-10 drop-shadow-lg" />
-                </button>
-
-                {/* Language labels orbiting around */}
-                {activePersona.languages.map((lang, i) => {
-                  const total = activePersona.languages.length;
-                  // Position labels evenly around the bottom semicircle
-                  const startAngle = 200; // degrees from top
-                  const endAngle = 340;
-                  const angle = total === 1 ? 270 : startAngle + (i * (endAngle - startAngle)) / (total - 1);
-                  const rad = (angle * Math.PI) / 180;
-                  const radius = 155;
-                  const x = Math.cos(rad) * radius;
-                  const y = Math.sin(rad) * radius;
-
-                  return (
-                    <button
-                      key={lang}
-                      onClick={() => setLangs((prev) => ({ ...prev, [activePersona.id]: lang }))}
-                      className={`absolute text-sm font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer ${
-                        selectedLang === lang
-                          ? 'text-white scale-110'
-                          : 'text-text-tertiary hover:text-text-secondary scale-100'
-                      }`}
-                      style={{
-                        transform: `translate(${x}px, ${y}px)`,
-                      }}
-                    >
-                      {LANG_LABEL[lang]}
-                    </button>
-                  );
-                })}
-
-                {/* Extra languages indicator */}
-                {activePersona.languages.length > 2 && (
-                  <span
-                    className="absolute text-xs font-bold text-accent tracking-wide"
-                    style={{
-                      transform: `translate(${Math.cos((340 * Math.PI) / 180) * 160}px, ${Math.sin((340 * Math.PI) / 180) * 160}px) rotate(25deg)`,
-                    }}
-                  >
-                    +{activePersona.languages.length} languages
-                  </span>
-                )}
-              </div>
-
-              {/* Start Call CTA */}
-              <button
-                onClick={() => {
-                  if (callState !== 'active' && activePersona) {
-                    onSelectPersona(activePersona, selectedLang);
-                  }
-                }}
-                disabled={callState === 'active'}
-                className="inline-flex items-center gap-3 px-10 py-4 rounded-2xl bg-white/[0.04] backdrop-blur-xl border border-white/10 text-white font-semibold text-base hover:bg-white/[0.08] hover:border-white/20 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <Phone size={18} />
-                Talk to {activePersona.display_name}
-                <ArrowRight size={16} className="text-text-tertiary" />
-              </button>
             </motion.div>
           )}
         </AnimatePresence>
@@ -464,15 +469,11 @@ function OpenAgentSection({
   const inView = useInView(sectionRef, { once: true, margin: '-100px' });
 
   const openAgent = personas.find((p) => p.id === 'open');
-  if (!openAgent) return null;
 
   return (
-    <section
-      id="open-agent"
-      className="py-24 px-6 lg:px-12 relative overflow-hidden border-t border-white/5"
-      ref={sectionRef}
-    >
-      <div className="max-w-4xl mx-auto relative z-10">
+    <section id="open-agent" className="py-24 px-6 lg:px-12 relative overflow-hidden border-t border-white/5 min-h-[400px]" ref={sectionRef}>
+      {openAgent && (
+        <div className="max-w-4xl mx-auto relative z-10">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
@@ -565,6 +566,7 @@ function OpenAgentSection({
           </div>
         </motion.div>
       </div>
+      )}
     </section>
   );
 }

@@ -27,7 +27,7 @@ class SarvamSTTClient:
     async def transcribe(self, audio_bytes: bytes, language_code: str) -> str:
         files = {"file": ("audio.webm", audio_bytes, "audio/webm")}
         data = {
-            "language_code": language_code,
+            "language_code": "unknown",
             "model": "saaras:v3",
             "mode": "transcribe"
         }
