@@ -106,6 +106,17 @@ TOOL_SCHEMAS = {
             },
             "required": ["booking_code"]
         }
+    },
+    "switch_language": {
+        "name": "switch_language",
+        "description": "Switch the conversation language if the user interacts in a different language.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "language_code": {"type": "string", "description": "Must be one of: en-IN, hi-IN, te-IN"}
+            },
+            "required": ["language_code"]
+        }
     }
 }
 
@@ -127,7 +138,8 @@ def load_system_prompt(persona_id: str, default_context: dict, language: str) ->
     
     safe_context = SafeDict(**default_context)
     prompt = prompt.format_map(safe_context)
-    prompt += f"\n\n[System Note: The user's language is {language}. Respond in this language.]"
+    prompt += f"\n\n[System Note: The current session language is {language}. You MUST respond in {language}."
+    prompt += f"\nIf you notice the user's text suggests they are speaking a different language (e.g. Hindi or Telugu), you MUST call the `switch_language` tool immediately so the system adapts. Your spoken output will sound best if you use the correct language setting.]"
     return prompt
 
 def build_tool_definitions(tool_names: list[str]) -> list[dict]:
@@ -165,6 +177,8 @@ async def run_pipeline(transcript: str, session, ws: WebSocket):
         # 5. Load tool definitions
         persona_yaml = load_persona_yaml(session.persona_id)
         tool_names = persona_yaml.get("tools", [])
+        if "switch_language" not in tool_names:
+            tool_names.append("switch_language")
         tool_definitions = build_tool_definitions(tool_names)
         system_prompt = load_system_prompt(session.persona_id, persona_yaml.get("default_context", {}), session.language)
         
@@ -179,7 +193,16 @@ async def run_pipeline(transcript: str, session, ws: WebSocket):
             for tc in tool_calls:
                 name = tc["name"]
                 args = tc.get("args", {})
-                result = execute_tool(name, args)
+                if name == "switch_language":
+                    new_lang = args.get("language_code")
+                    if new_lang in ["en-IN", "hi-IN", "te-IN"]:
+                        session.language = new_lang
+                        await ws.send_json({"type": "language_switched", "language": new_lang})
+                        result = {"success": True, "message": f"Language switched to {new_lang}"}
+                    else:
+                        result = {"error": "Invalid language_code"}
+                else:
+                    result = execute_tool(name, args)
                 tool_results.append({"name": name, "response": {"result": result}})
                 
             response_text = await gemini_client.send_tool_results(

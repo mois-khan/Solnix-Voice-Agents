@@ -11,6 +11,9 @@ VOICE_MAP = {
     ("meera", "en-IN"): "vidya",
     ("meera", "hi-IN"): "vidya",
     ("meera", "te-IN"): "vidya",
+    ("open", "en-IN"): "arya",
+    ("open", "hi-IN"): "arya",
+    ("open", "te-IN"): "arya",
 }
 
 class SarvamSTTClient:

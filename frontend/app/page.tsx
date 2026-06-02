@@ -244,6 +244,15 @@ function PersonaPicker({
           short_blurb: 'Book, reschedule, or cancel appointments instantly.',
           languages: ['en-IN', 'hi-IN', 'te-IN'],
           default_language: 'en-IN',
+        },
+        {
+          id: 'open',
+          display_name: 'Open Agent',
+          role: 'General AI Assistant',
+          avatar: '/personas/open.png',
+          short_blurb: 'A versatile AI agent ready to help you with anything.',
+          languages: ['en-IN', 'hi-IN', 'te-IN'],
+          default_language: 'en-IN',
         }
       ];
       setPersonas(fallbackData);
@@ -262,17 +271,27 @@ function PersonaPicker({
   return (
     <section id="personas" className="py-24 px-6 lg:px-12 relative overflow-hidden backdrop-blur-2xl bg-bg-base/60 border-t border-white/5" ref={sectionRef}>
       <div className="max-w-5xl mx-auto relative z-10">
+        
+        {/* Scenario Agents Section */}
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="text-[32px] font-semibold text-text-primary text-center mb-12 drop-shadow-sm"
+          className="text-[32px] font-semibold text-text-primary text-center mb-4 drop-shadow-sm"
         >
-          Pick someone to talk to
+          Scenario Agents
         </motion.h2>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={inView ? { opacity: 1 } : {}}
+          transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
+          className="text-text-secondary text-center mb-12 max-w-xl mx-auto"
+        >
+          Test specialized flows like loan recovery, insurance renewal, or booking.
+        </motion.p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {personas.map((p, i) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
+          {personas.filter(p => p.id !== 'open').map((p, i) => (
             <motion.div
               key={p.id}
               initial={{ opacity: 0, y: 24 }}
@@ -289,6 +308,77 @@ function PersonaPicker({
                 }
                 onTalk={() => onSelectPersona(p, langs[p.id] || p.default_language)}
               />
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Open Agent Section */}
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
+          className="text-[32px] font-semibold text-text-primary text-center mb-4 drop-shadow-sm mt-12"
+        >
+          Open Voice Agent
+        </motion.h2>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={inView ? { opacity: 1 } : {}}
+          transition={{ duration: 0.5, delay: 0.3, ease: 'easeOut' }}
+          className="text-text-secondary text-center mb-12 max-w-xl mx-auto"
+        >
+          Have a free-flowing conversation. Assign roles on the fly or just chat.
+        </motion.p>
+
+        <div className="flex justify-center">
+          {personas.filter(p => p.id === 'open').map((p) => (
+            <motion.div
+              key={p.id}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={inView ? { opacity: 1, scale: 1 } : {}}
+              transition={{ duration: 0.6, delay: 0.4, ease: 'easeOut' }}
+              className="w-full max-w-3xl relative group"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-accent/30 via-accent-light/10 to-accent/30 rounded-3xl blur-2xl opacity-50 group-hover:opacity-100 transition-opacity duration-700" />
+              <div className="relative rounded-3xl border-2 border-accent/30 bg-bg-card/80 backdrop-blur-xl p-8 overflow-hidden flex flex-col md:flex-row items-center gap-8 shadow-2xl">
+                <div className="w-32 h-32 shrink-0 rounded-full overflow-hidden border-4 border-white/10 relative z-10 shadow-lg">
+                  <img src={p.avatar} alt={p.display_name} className="w-full h-full object-cover" />
+                </div>
+                
+                <div className="flex-1 text-center md:text-left relative z-10">
+                  <h3 className="text-2xl font-bold text-text-primary mb-2">{p.display_name}</h3>
+                  <p className="text-text-secondary mb-6">{p.short_blurb}</p>
+                  
+                  <div className="flex flex-col sm:flex-row items-center gap-4">
+                    <div className="flex gap-2">
+                      {p.languages.map((lang) => (
+                        <button
+                          key={lang}
+                          onClick={() => setLangs((prev) => ({ ...prev, [p.id]: lang }))}
+                          className={`px-3 py-1.5 text-xs font-semibold rounded-pill border transition-all ${
+                            (langs[p.id] || p.default_language) === lang
+                              ? 'bg-accent text-white border-accent'
+                              : 'bg-white/5 border-white/10 text-text-secondary hover:bg-white/10'
+                          }`}
+                        >
+                          {lang === 'en-IN' ? 'EN' : lang === 'hi-IN' ? 'हि' : 'తె'}
+                        </button>
+                      ))}
+                    </div>
+                    
+                    <button
+                      onClick={() => onSelectPersona(p, langs[p.id] || p.default_language)}
+                      disabled={callState === 'active'}
+                      className="px-6 py-2.5 rounded-xl bg-accent text-white font-semibold shadow-lg shadow-accent/25 hover:brightness-110 active:scale-95 transition-all w-full sm:w-auto"
+                    >
+                      Talk to Open Agent
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Decorative background element */}
+                <div className="absolute right-[-10%] top-[-20%] w-[50%] h-[150%] bg-white/[0.02] rotate-12 pointer-events-none" />
+              </div>
             </motion.div>
           ))}
         </div>

@@ -10,7 +10,7 @@ class SessionCreate(BaseModel):
 
 @router.post("")
 async def post_sessions(payload: SessionCreate):
-    valid_personas = ["priya", "arjun", "meera"]
+    valid_personas = ["priya", "arjun", "meera", "open"]
     valid_languages = ["en-IN", "hi-IN", "te-IN"]
 
     if payload.persona_id not in valid_personas:

@@ -1,0 +1,14 @@
+id: open
+display_name: Open Agent
+role: General AI Assistant
+avatar: /personas/open.png
+short_blurb: "A versatile AI agent ready to help you with anything."
+languages: [en-IN, hi-IN, te-IN]
+default_language: en-IN
+llm:
+  model: gemini-2.0-flash
+  temperature: 0.7
+  max_output_tokens: 300
+system_prompt_file: prompts/open.md
+tools: []
+default_context: {}
